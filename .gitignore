@@ -1,0 +1,51 @@
+# Node.js
+node_modules/
+.env
+.DS_Store
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+ENV/
+venv.bak/
+*.env
+*.env.*
+
+# VS Code
+.vscode/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Logs
+*.log
+
+# Python virtual environments
+backend/venv/
+backend/env/
+
+# Compiled files
+backend/__pycache__/
+
+# Build output
+frontend/build/
+
+# Misc
+*.swp
+*.swo
+
+# Office temp files
+~$*
+
+# Uploads and generated docs
+backend/uploads/
+backend/generated/

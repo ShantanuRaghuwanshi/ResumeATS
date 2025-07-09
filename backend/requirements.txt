@@ -1,0 +1,8 @@
+fastapi
+python-multipart
+python-docx
+pdfplumber
+jinja2
+docxtpl
+uvicorn
+pypdf2
