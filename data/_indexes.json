@@ -1,0 +1,47 @@
+{
+  "conversations": [
+    "user_id",
+    "resume_id",
+    "section",
+    "created_at"
+  ],
+  "optimization_requests": [
+    "user_id",
+    "resume_id",
+    "status",
+    "created_at"
+  ],
+  "job_analyses": [
+    "user_id",
+    "job_title",
+    "industry",
+    "created_at"
+  ],
+  "resume_versions": [
+    "user_id",
+    "is_current",
+    "created_at"
+  ],
+  "user_preferences": [
+    "user_id",
+    "category",
+    "last_updated"
+  ],
+  "feedback": [
+    "user_id",
+    "session_id",
+    "type",
+    "created_at"
+  ],
+  "suggestions": [
+    "session_id",
+    "section",
+    "type",
+    "applied"
+  ],
+  "messages": [
+    "session_id",
+    "role",
+    "timestamp"
+  ]
+}

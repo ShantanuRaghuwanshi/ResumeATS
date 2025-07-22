@@ -1,0 +1,70 @@
+{
+  "bee40904-254d-4d30-8f59-64a9834dff28": {
+    "change_id": "bee40904-254d-4d30-8f59-64a9834dff28",
+    "section": "work_experience",
+    "change_type": "addition",
+    "before_content": {
+      "title": "Software Engineer",
+      "company": "Tech Corp",
+      "summary": "Worked on various projects and helped the team."
+    },
+    "after_content": {
+      "title": "Software Engineer",
+      "company": "Tech Corp",
+      "summary": "Led development of 3 major projects, improving system performance by 40% and reducing deployment time by 60%."
+    },
+    "overall_impact": 0.23583333333333334,
+    "ats_impact": 0.0,
+    "keyword_impact": 0.041666666666666664,
+    "readability_impact": -0.0708333333333333,
+    "relevance_impact": 0.0,
+    "positive_changes": [
+      "Added quantified achievements",
+      "Improved action verbs",
+      "Added more detailed content"
+    ],
+    "negative_changes": [],
+    "neutral_changes": [],
+    "further_improvements": [
+      "Add impact statements showing results"
+    ],
+    "warnings": [],
+    "analysis_timestamp": "2025-07-20T06:30:50.119404",
+    "created_at": "2025-07-20T06:30:50.120310",
+    "updated_at": "2025-07-20T06:30:50.120318"
+  },
+  "1391d695-f19b-4c22-a75f-e2a34a132a26": {
+    "change_id": "1391d695-f19b-4c22-a75f-e2a34a132a26",
+    "section": "work_experience",
+    "change_type": "addition",
+    "before_content": {
+      "title": "Software Engineer",
+      "company": "Tech Corp",
+      "summary": "Worked on various projects and helped the team."
+    },
+    "after_content": {
+      "title": "Software Engineer",
+      "company": "Tech Corp",
+      "summary": "Led development of 3 major projects, improving system performance by 40% and reducing deployment time by 60%."
+    },
+    "overall_impact": 0.23583333333333334,
+    "ats_impact": 0.0,
+    "keyword_impact": 0.041666666666666664,
+    "readability_impact": -0.0708333333333333,
+    "relevance_impact": 0.0,
+    "positive_changes": [
+      "Added quantified achievements",
+      "Improved action verbs",
+      "Added more detailed content"
+    ],
+    "negative_changes": [],
+    "neutral_changes": [],
+    "further_improvements": [
+      "Add impact statements showing results"
+    ],
+    "warnings": [],
+    "analysis_timestamp": "2025-07-20T06:35:37.800463",
+    "created_at": "2025-07-20T06:35:37.800514",
+    "updated_at": "2025-07-20T06:35:37.800520"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "suggestion_aggressiveness": "moderate",
+  "auto_apply_high_confidence": false,
+  "show_reasoning": true,
+  "real_time_feedback": true,
+  "email_suggestions": false,
+  "weekly_summary": true,
+  "allow_learning": true,
+  "share_anonymous_data": false,
+  "preferred_theme": "auto",
+  "compact_mode": false
+}

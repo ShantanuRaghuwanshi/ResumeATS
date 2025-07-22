@@ -1,0 +1,10 @@
+{
+  "last_migration": "2025-07-19T06:09:45.371251",
+  "version": "1.0.0",
+  "migrations_applied": [
+    "Creating initial schema",
+    "Migrating existing resume data",
+    "Setting up default user preferences",
+    "Setting up analytics tracking"
+  ]
+}

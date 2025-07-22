@@ -1,0 +1,23 @@
+{
+  "test-resume-456": {
+    "id": "test-resume-456",
+    "user_id": "test-user-123",
+    "data": {
+      "personal_details": {
+        "name": "John Doe",
+        "email": "john@example.com"
+      },
+      "work_experience": [
+        {
+          "title": "Software Developer",
+          "company": "Tech Corp",
+          "from_date": "2020-01",
+          "to_date": "2023-12",
+          "summary": "Worked on web applications"
+        }
+      ]
+    },
+    "created_at": "2025-07-19T06:18:23.974182",
+    "updated_at": "2025-07-19T06:18:23.974194"
+  }
+}

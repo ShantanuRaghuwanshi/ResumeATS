@@ -1,0 +1,243 @@
+from fastapi import APIRouter, UploadFile, File, Form, Body, HTTPException, Request
+from fastapi.responses import FileResponse, JSONResponse
+import os
+from configs.config import get_logger
+
+logger = get_logger(__name__)
+import aiofiles
+import json
+from services.resume_parser import (
+    parse_resume,
+    get_logs,
+    extract_personal_details,
+    extract_sections,
+)
+from services.resume_generator import generate_resume
+from services.jd_optimizer import optimize_resume_for_jd
+from services.llm_provider import LLMProviderFactory
+
+router = APIRouter()
+
+UPLOAD_DIR = "uploads"
+GENERATED_DIR = "generated"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+os.makedirs(GENERATED_DIR, exist_ok=True)
+
+parsed_resume_store = {}
+
+
+@router.post("/llm/test")
+async def test_llm_config(config: dict = Body(...)):
+    provider_name = config.get("provider")
+    if not provider_name:
+        raise HTTPException(status_code=400, detail="Missing 'provider' in config")
+    api_key = config.get("apiKey")
+    url = config.get("url", "http://localhost:11434")
+    model = config.get("model", "gemma3n:e4b")
+    config = {"provider": provider_name, "api_key": api_key, "url": url, "model": model}
+    try:
+        provider = LLMProviderFactory.create(provider_name, config)
+        dummy_text = "John Doe, johndoe@email.com, linkedin.com/in/johndoe"
+        result = await provider.extract_personal_details(dummy_text)
+        return JSONResponse({"success": True, "result": result.model_dump()})
+    except Exception as e:
+        return JSONResponse({"success": False, "error": str(e)}, status_code=500)
+
+
+@router.post("/upload_resume/")
+async def upload_resume(
+    request: Request,
+    file: UploadFile = File(...),
+    provider_name: str = Form("ollama"),
+    provider_config: str = Form("{}"),
+):
+    from security.middleware import upload_rate_limit
+    from security.input_validation import (
+        validate_resume_upload,
+        InputSanitizer,
+        SecureResumeData,
+    )
+    from security.audit_logging import (
+        log_user_action,
+        log_security_event,
+        AuditEventType,
+        AuditSeverity,
+    )
+
+    # Apply rate limiting
+    await upload_rate_limit(request)
+
+    try:
+        # Validate and sanitize filename
+        if not file.filename:
+            raise HTTPException(status_code=400, detail="Filename is required")
+
+        sanitized_filename = InputSanitizer.sanitize_filename(file.filename)
+        if not sanitized_filename:
+            raise HTTPException(status_code=400, detail="Invalid filename")
+
+        # Read file content
+        content = await file.read()
+
+        # Validate file upload
+        validate_resume_upload(content, sanitized_filename)
+
+        # Log upload attempt
+        await log_user_action(
+            "resume_upload",
+            request,
+            resource_type="resume",
+            details={
+                "filename": sanitized_filename,
+                "file_size": len(content),
+                "provider": provider_name,
+            },
+        )
+
+        # Save file with sanitized name
+        file_path = os.path.join(UPLOAD_DIR, sanitized_filename)
+        async with aiofiles.open(file_path, "wb") as f:
+            await f.write(content)
+
+        # Validate and sanitize provider config
+        try:
+            config = json.loads(provider_config) if provider_config else {}
+        except json.JSONDecodeError:
+            raise HTTPException(
+                status_code=400, detail="Invalid provider configuration JSON"
+            )
+
+        # Parse resume
+        parsed = parse_resume(file_path, provider_name, config)
+        text = parsed.get("text", "")
+
+        # Extract and validate personal details
+        personal = await extract_personal_details(text, provider_name, config)
+        extrac_sections = await extract_sections(text, provider_name, config)
+
+        education = extrac_sections.get("education", [])
+        work_experience = extrac_sections.get("work_experience", [])
+        projects = extrac_sections.get("projects", [])
+        skills = extrac_sections.get("skills", [])
+
+        # Create structured data
+        structured = {
+            "personal_details": personal.model_dump(),
+            "education": education,
+            "work_experience": work_experience,
+            "projects": projects,
+            "skills": skills,
+        }
+
+        # Validate and sanitize the structured data
+        try:
+            secure_data = SecureResumeData(**structured)
+            structured = secure_data.dict()
+        except ValueError as e:
+            await log_security_event(
+                AuditEventType.SECURITY_VIOLATION,
+                request,
+                details={"violation": "invalid_resume_data", "error": str(e)},
+                severity=AuditSeverity.MEDIUM,
+                success=False,
+                error_message=str(e),
+            )
+            raise HTTPException(
+                status_code=400, detail=f"Invalid resume data: {str(e)}"
+            )
+
+        # Store parsed resume
+        parsed_resume_store["resume"] = structured
+
+        # Log successful upload
+        await log_user_action(
+            "resume_parsed",
+            request,
+            resource_type="resume",
+            details={
+                "filename": sanitized_filename,
+                "sections_extracted": list(structured.keys()),
+            },
+            success=True,
+        )
+
+        return JSONResponse(structured)
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception("Failed to upload or parse resume")
+
+        # Log error
+        await log_security_event(
+            AuditEventType.ERROR_OCCURRED,
+            request,
+            details={
+                "operation": "resume_upload",
+                "error": str(e),
+                "filename": file.filename if file else "unknown",
+            },
+            severity=AuditSeverity.HIGH,
+            success=False,
+            error_message=str(e),
+        )
+
+        return JSONResponse(
+            {"error": "Failed to process resume upload"}, status_code=500
+        )
+
+
+@router.get("/resume_sections/")
+async def get_resume_sections():
+    resume = parsed_resume_store.get("resume")
+    if not resume:
+        return JSONResponse({"error": "No resume parsed yet."}, status_code=404)
+    return JSONResponse(resume)
+
+
+@router.patch("/resume_sections/")
+async def update_resume_sections(update: dict = Body(...)):
+    resume = parsed_resume_store.get("resume")
+    if not resume:
+        return JSONResponse({"error": "No resume parsed yet."}, status_code=404)
+    for k, v in update.items():
+        resume[k] = v
+    parsed_resume_store["resume"] = resume
+    return JSONResponse(resume)
+
+
+@router.post("/optimize_resume/")
+async def optimize_resume(parsed: dict = Body(...), jd: str = Body(...)):
+    try:
+        updated = optimize_resume_for_jd(parsed, jd)
+        return JSONResponse(updated)
+    except Exception as e:
+        logger.exception("Failed to optimize resume")
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
+@router.post("/generate_resume/")
+async def generate(
+    parsed: dict = Body(...),
+    template: str = Body("modern"),
+    filetype: str = Body("docx"),
+):
+    try:
+        output_path = generate_resume(parsed, template, filetype)
+        return {"download_url": f"/download/{os.path.basename(output_path)}"}
+    except Exception as e:
+        logger.exception("Failed to generate resume")
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
+@router.get("/download/{filename}")
+async def download(filename: str):
+    file_path = os.path.join(GENERATED_DIR, filename)
+    return FileResponse(file_path, filename=filename)
+
+
+@router.get("/logs/")
+async def fetch_logs():
+    return JSONResponse(
+        {"logs": get_logs()}
+    )  # Resume endpoints will be refactored here from your current main.py

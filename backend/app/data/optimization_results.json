@@ -1,0 +1,57 @@
+{
+  "38bd6d77-7704-4905-a569-180ffdfd6d49": {
+    "request_id": "38bd6d77-7704-4905-a569-180ffdfd6d49",
+    "optimized_content": [
+      {
+        "title": "Software Developer",
+        "company": "Tech Corp",
+        "from_date": "2020-01",
+        "to_date": "2023-12",
+        "summary": "Worked on web applications",
+        "achievements": [
+          "Assisted in improve system performance",
+          "Developed new features"
+        ]
+      }
+    ],
+    "suggestions": [
+      {
+        "id": "1ccd5692-f1a3-4e7e-9b9f-b1edd94e0587",
+        "type": "content",
+        "title": "Use Stronger Action Verbs",
+        "description": "Start bullet points with powerful action verbs that demonstrate leadership and impact",
+        "original_text": null,
+        "suggested_text": null,
+        "impact_score": 0.7,
+        "reasoning": "Strong action verbs create more dynamic and engaging descriptions",
+        "section": "work_experience",
+        "confidence": 0.9,
+        "applied": false,
+        "created_at": "2025-07-19T06:40:06.724877"
+      },
+      {
+        "id": "619903a2-7f51-4c55-83c8-a4a6c65c4fd8",
+        "type": "content",
+        "title": "Add Quantified Achievements",
+        "description": "Include specific numbers, percentages, and metrics to demonstrate impact",
+        "original_text": null,
+        "suggested_text": null,
+        "impact_score": 0.9,
+        "reasoning": "Quantified achievements are more compelling and memorable to recruiters",
+        "section": "work_experience",
+        "confidence": 0.8,
+        "applied": false,
+        "created_at": "2025-07-19T06:40:06.724895"
+      }
+    ],
+    "improvement_score": 0.20000000000000007,
+    "ats_score": 0.2,
+    "keyword_density": {},
+    "readability_score": 0.5,
+    "changes_summary": "Enhanced content structure and formatting; Improved action verbs and impact statements; Optimized for ATS compatibility",
+    "processing_time_seconds": 0.0,
+    "completed_at": "2025-07-19T06:40:06.724986",
+    "created_at": "2025-07-19T06:40:06.725257",
+    "updated_at": "2025-07-19T06:40:06.725263"
+  }
+}

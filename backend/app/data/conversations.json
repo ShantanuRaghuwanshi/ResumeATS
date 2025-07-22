@@ -1,0 +1,79 @@
+{
+  "068f3762-2032-45d2-a76f-e0e552623527": {
+    "id": "068f3762-2032-45d2-a76f-e0e552623527",
+    "resume_id": "test-resume-456",
+    "user_id": "test-user-123",
+    "section": "work_experience",
+    "title": "Work Experience Optimization",
+    "created_at": "2025-07-19T06:18:25.342649",
+    "last_activity": "2025-07-19T06:18:25.398396",
+    "context": {
+      "resume_id": "test-resume-456",
+      "user_id": "test-user-123",
+      "current_section": "work_experience",
+      "full_resume_data": {
+        "id": "test-resume-456",
+        "user_id": "test-user-123",
+        "data": {
+          "personal_details": {
+            "name": "John Doe",
+            "email": "john@example.com"
+          },
+          "work_experience": [
+            {
+              "title": "Software Developer",
+              "company": "Tech Corp",
+              "from_date": "2020-01",
+              "to_date": "2023-12",
+              "summary": "Worked on web applications"
+            }
+          ]
+        },
+        "created_at": "2025-07-19T06:18:23.974182",
+        "updated_at": "2025-07-19T06:18:23.974194"
+      },
+      "job_description": null,
+      "optimization_goals": [],
+      "user_preferences": {}
+    },
+    "messages": [
+      {
+        "id": "c4736076-7e3e-4679-a3a4-029f88c2cc42",
+        "session_id": "068f3762-2032-45d2-a76f-e0e552623527",
+        "role": "user",
+        "content": "I want to improve my work experience section to highlight my achievements better.",
+        "timestamp": "2025-07-19T06:18:25.356403",
+        "suggestions": [],
+        "metadata": {}
+      },
+      {
+        "id": "a459b63d-df5e-442b-84e1-7ab1155ff421",
+        "session_id": "068f3762-2032-45d2-a76f-e0e552623527",
+        "role": "assistant",
+        "content": "I understand you want to work on your work_experience section. Let me analyze your current content and provide some suggestions.",
+        "timestamp": "2025-07-19T06:18:25.356635",
+        "suggestions": [
+          {
+            "id": "9cf3fc64-aeb9-4deb-8fc2-2685d402b5ed",
+            "type": "content",
+            "title": "Use stronger action verbs",
+            "description": "Replace weak verbs with powerful action words that demonstrate impact",
+            "original_text": null,
+            "suggested_text": null,
+            "impact_score": 0.8,
+            "reasoning": "Action verbs make achievements more compelling to recruiters",
+            "section": "work_experience",
+            "confidence": 0.9,
+            "applied": true,
+            "created_at": "2025-07-19T06:18:25.356584"
+          }
+        ],
+        "metadata": {}
+      }
+    ],
+    "is_active": false,
+    "total_suggestions": 1,
+    "applied_suggestions": 1,
+    "updated_at": "2025-07-19T06:18:25.398462"
+  }
+}

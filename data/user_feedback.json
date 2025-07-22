@@ -1,0 +1,17 @@
+{
+  "4406a00f-ce4e-4fbd-9eb8-0746ee810309": {
+    "id": "4406a00f-ce4e-4fbd-9eb8-0746ee810309",
+    "user_id": "test-user-1",
+    "suggestion_id": null,
+    "session_id": "test-session-1",
+    "rating": 4,
+    "feedback_type": "suggestion_quality",
+    "comment": "The suggestions were very helpful",
+    "section": "work_experience",
+    "feature_used": null,
+    "helpful": true,
+    "would_recommend": true,
+    "created_at": "2025-07-20T06:35:37.857848",
+    "updated_at": "2025-07-20T06:35:37.857863"
+  }
+}

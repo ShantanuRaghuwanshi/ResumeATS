@@ -1,0 +1,56 @@
+{
+  "b5ff58f2-dc1f-4be9-85d5-6b2bf0ff5473": {
+    "id": "b5ff58f2-dc1f-4be9-85d5-6b2bf0ff5473",
+    "resume_id": "test-resume-optimizer",
+    "user_id": "test-user-optimizer",
+    "section": "work_experience",
+    "content": [
+      {
+        "title": "Software Developer",
+        "company": "Tech Corp",
+        "from_date": "2020-01",
+        "to_date": "2023-12",
+        "summary": "Worked on web applications",
+        "achievements": [
+          "Helped improve system performance",
+          "Worked on new features"
+        ]
+      }
+    ],
+    "job_description": "Senior Software Engineer position requiring Python and React skills",
+    "optimization_type": "job_specific",
+    "target_industry": null,
+    "experience_level": null,
+    "specific_instructions": null,
+    "created_at": "2025-07-19T06:39:26.350588",
+    "status": "pending",
+    "updated_at": "2025-07-19T06:39:26.350600"
+  },
+  "38bd6d77-7704-4905-a569-180ffdfd6d49": {
+    "id": "38bd6d77-7704-4905-a569-180ffdfd6d49",
+    "resume_id": "test-resume-optimizer",
+    "user_id": "test-user-optimizer",
+    "section": "work_experience",
+    "content": [
+      {
+        "title": "Software Developer",
+        "company": "Tech Corp",
+        "from_date": "2020-01",
+        "to_date": "2023-12",
+        "summary": "Worked on web applications",
+        "achievements": [
+          "Helped improve system performance",
+          "Worked on new features"
+        ]
+      }
+    ],
+    "job_description": "Senior Software Engineer position requiring Python and React skills",
+    "optimization_type": "job_specific",
+    "target_industry": null,
+    "experience_level": null,
+    "specific_instructions": null,
+    "created_at": "2025-07-19T06:40:06.720666",
+    "status": "pending",
+    "updated_at": "2025-07-19T06:40:06.720672"
+  }
+}

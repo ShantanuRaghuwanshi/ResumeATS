@@ -10,3 +10,21 @@ spacy
 openai
 requests
 aiofiles
+openai
+anthropic
+google-generativeai
+websockets
+pytest
+pytest-asyncio
+pytest-mock
+pytest-cov
+httpx
+faker
+# Security dependencies
+bleach
+redis
+pydantic[email]
+slowapi
+python-jose[cryptography]
+passlib[bcrypt]
+python-multipart
