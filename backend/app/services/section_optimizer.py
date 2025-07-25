@@ -138,14 +138,106 @@ class SectionOptimizer:
             logger.error(f"Failed to optimize section: {e}")
             raise
 
+    async def _generate_llm_content_suggestions(
+        self,
+        content: Dict,
+        strategy: SectionOptimizationStrategy,
+        context: ResumeContext,
+        focus_areas: List[str] = None,
+        llm_provider_instance=None,
+    ) -> List[Suggestion]:
+        """Generate content-based suggestions using LLM provider"""
+        try:
+            if not llm_provider_instance:
+                return []
+
+            # Convert content to string for LLM processing
+            content_text = json.dumps(content) if isinstance(content, dict) else str(content)
+            
+            # Generate suggestions using LLM
+            suggestions = await llm_provider_instance.generate_section_suggestions(
+                section=context.current_section,
+                content=content_text,
+                context=context
+            )
+            
+            return suggestions
+            
+        except Exception as e:
+            logger.error(f"Failed to generate LLM content suggestions: {e}")
+            return []
+
+    async def _generate_fallback_suggestions(
+        self,
+        section: str,
+        content: Dict,
+        strategy: SectionOptimizationStrategy,
+        context: ResumeContext,
+    ) -> List[Suggestion]:
+        """Generate fallback suggestions when LLM provider is not available"""
+        suggestions = []
+
+        # Example content suggestions based on section
+        if section == "work_experience":
+            suggestions.append(
+                Suggestion(
+                    type="content",
+                    title="Quantify Your Achievements",
+                    description="Add specific numbers, percentages, and metrics to demonstrate your impact",
+                    impact_score=0.9,
+                    reasoning="Quantified achievements are more compelling and memorable",
+                    section=section,
+                    confidence=0.8,
+                )
+            )
+            suggestions.append(
+                Suggestion(
+                    type="content",
+                    title="Use Strong Action Verbs",
+                    description="Start bullet points with powerful action verbs to show initiative",
+                    impact_score=0.7,
+                    reasoning="Action verbs make your contributions more dynamic and impactful",
+                    section=section,
+                    confidence=0.7,
+                )
+            )
+        elif section == "skills":
+            suggestions.append(
+                Suggestion(
+                    type="content",
+                    title="Include Technical Skills",
+                    description="Add relevant technical skills that match job requirements",
+                    impact_score=0.8,
+                    reasoning="Technical skills are often filtered by ATS systems",
+                    section=section,
+                    confidence=0.8,
+                )
+            )
+        elif section == "education":
+            suggestions.append(
+                Suggestion(
+                    type="content",
+                    title="Include Relevant Coursework",
+                    description="Add coursework relevant to your target position",
+                    impact_score=0.6,
+                    reasoning="Relevant coursework demonstrates specific knowledge areas",
+                    section=section,
+                    confidence=0.7,
+                )
+            )
+
+        return suggestions
+
     async def suggest_improvements(
         self,
         section: str,
         content: Dict[str, Any],
         context: ResumeContext,
         focus_areas: List[str] = None,
+        llm_provider: str = "ollama",
+        llm_config: Dict[str, Any] = None,
     ) -> List[Suggestion]:
-        """Generate improvement suggestions for a section"""
+        """Generate improvement suggestions for a section using specified LLM provider"""
 
         try:
             # Get section strategy
@@ -157,9 +249,20 @@ class SectionOptimizer:
 
             suggestions = []
 
-            # Content-based suggestions
-            content_suggestions = await self._generate_content_suggestions(
-                content, strategy, context, focus_areas
+            # Create LLM provider instance
+            if llm_config is None:
+                llm_config = {}
+            
+            try:
+                llm_provider_instance = LLMProviderFactory.create(llm_provider, llm_config)
+            except Exception as e:
+                logger.warning(f"Failed to create LLM provider {llm_provider}: {e}. Falling back to hardcoded suggestions.")
+                # Fallback to hardcoded suggestions if LLM provider fails
+                return await self._generate_fallback_suggestions(section, content, strategy, context)
+
+            # Content-based suggestions using LLM
+            content_suggestions = await self._generate_llm_content_suggestions(
+                content, strategy, context, focus_areas, llm_provider_instance
             )
             suggestions.extend(content_suggestions)
 
@@ -1361,3 +1464,27 @@ class SectionOptimizer:
         )
 
         return suggestions
+
+    async def health_check(self) -> bool:
+        """Perform health check for section optimizer"""
+        try:
+            # Check if database is accessible
+            if self.db is None:
+                return False
+                
+            # Check if optimization strategies are loaded
+            if not hasattr(self, 'optimization_strategies') or not self.optimization_strategies:
+                return False
+                
+            # Check if action verbs are loaded
+            if not hasattr(self, 'action_verbs') or not self.action_verbs:
+                return False
+                
+            # Check if industry keywords are loaded
+            if not hasattr(self, 'industry_keywords') or not self.industry_keywords:
+                return False
+                
+            return True
+        except Exception as e:
+            logger.error(f"SectionOptimizer health check failed: {e}")
+            return False

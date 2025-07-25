@@ -23,6 +23,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { cn } from "@/lib/utils";
+import { useLLMConfig } from "@/contexts/llm-context";
 import RealTimeFeedback from "./real-time-feedback";
 import SuggestionPanel from "./suggestion-panel";
 import type { Suggestion } from "../chat/section-chat";
@@ -66,6 +67,7 @@ export default function SectionEditor({
 
     const { toast } = useToast();
     const queryClient = useQueryClient();
+    const { llmConfig } = useLLMConfig();
 
     // Fetch section data
     const { data: sectionData, isLoading } = useQuery({
@@ -124,6 +126,14 @@ export default function SectionEditor({
         mutationFn: async () => {
             const response = await apiRequest("POST", `/resume/${resumeId}/section/${section}/suggestions`, {
                 data,
+                llm_provider: llmConfig?.provider || "ollama",
+                llm_config: llmConfig ? {
+                    apiKey: llmConfig.apiKey,
+                    url: llmConfig.url,
+                    model: llmConfig.model,
+                    organizationId: llmConfig.organizationId,
+                    deploymentName: llmConfig.deploymentName,
+                } : {},
             });
             return response.json();
         },
@@ -237,10 +247,12 @@ export default function SectionEditor({
     const renderSectionEditor = () => {
         switch (section) {
             case "personal":
+            case "personal_details":
                 return <PersonalDetailsEditor data={data} onChange={handleFieldChange} />;
             case "summary":
                 return <SummaryEditor data={data} onChange={handleFieldChange} />;
             case "experience":
+            case "work_experience":
                 return (
                     <ExperienceEditor
                         data={data}
@@ -253,8 +265,8 @@ export default function SectionEditor({
             case "skills":
                 return (
                     <SkillsEditor
-                        data={data}
-                        onChange={handleFieldChange}
+                        data={data.skills}
+                        onChange={(field: string, value: any) => handleFieldChange("skills", value)}
                         onArrayChange={handleArrayFieldChange}
                         onAddItem={handleAddArrayItem}
                         onRemoveItem={handleRemoveArrayItem}
@@ -263,6 +275,16 @@ export default function SectionEditor({
             case "education":
                 return (
                     <EducationEditor
+                        data={data}
+                        onChange={handleFieldChange}
+                        onArrayChange={handleArrayFieldChange}
+                        onAddItem={handleAddArrayItem}
+                        onRemoveItem={handleRemoveArrayItem}
+                    />
+                );
+            case "projects":
+                return (
+                    <ProjectsEditor
                         data={data}
                         onChange={handleFieldChange}
                         onArrayChange={handleArrayFieldChange}
@@ -382,8 +404,9 @@ export default function SectionEditor({
             {/* Sidebar */}
             <div className="space-y-4">
                 <RealTimeFeedback
-                    validation={validation}
-                    isValidating={false}
+                    section={section}
+                    content={JSON.stringify(data)}
+                    sessionId={resumeId}
                 />
 
                 <SuggestionPanel
@@ -442,12 +465,52 @@ function PersonalDetailsEditor({ data, onChange }: EditorProps) {
                 </div>
 
                 <div>
-                    <Label htmlFor="location">Location</Label>
+                    <Label htmlFor="address">Address</Label>
                     <Input
-                        id="location"
-                        value={data.location || ""}
-                        onChange={(e) => onChange("location", e.target.value)}
+                        id="address"
+                        value={data.address || ""}
+                        onChange={(e) => onChange("address", e.target.value)}
                         placeholder="City, State, Country"
+                    />
+                </div>
+
+                <div>
+                    <Label htmlFor="linkedin">LinkedIn</Label>
+                    <Input
+                        id="linkedin"
+                        value={data.linkedin || ""}
+                        onChange={(e) => onChange("linkedin", e.target.value)}
+                        placeholder="linkedin.com/in/yourprofile"
+                    />
+                </div>
+
+                <div>
+                    <Label htmlFor="github">GitHub</Label>
+                    <Input
+                        id="github"
+                        value={data.github || ""}
+                        onChange={(e) => onChange("github", e.target.value)}
+                        placeholder="github.com/yourusername"
+                    />
+                </div>
+
+                <div>
+                    <Label htmlFor="portfolio">Portfolio</Label>
+                    <Input
+                        id="portfolio"
+                        value={data.portfolio || ""}
+                        onChange={(e) => onChange("portfolio", e.target.value)}
+                        placeholder="yourportfolio.com"
+                    />
+                </div>
+
+                <div>
+                    <Label htmlFor="website">Website</Label>
+                    <Input
+                        id="website"
+                        value={data.website || ""}
+                        onChange={(e) => onChange("website", e.target.value)}
+                        placeholder="yourwebsite.com"
                     />
                 </div>
             </div>
@@ -460,6 +523,17 @@ function PersonalDetailsEditor({ data, onChange }: EditorProps) {
                     onChange={(e) => onChange("summary", e.target.value)}
                     placeholder="Brief professional summary..."
                     rows={4}
+                />
+            </div>
+
+            <div>
+                <Label htmlFor="objective">Career Objective</Label>
+                <Textarea
+                    id="objective"
+                    value={data.objective || ""}
+                    onChange={(e) => onChange("objective", e.target.value)}
+                    placeholder="Career objective..."
+                    rows={3}
                 />
             </div>
         </div>
@@ -486,7 +560,7 @@ function SummaryEditor({ data, onChange }: EditorProps) {
 }
 
 function ExperienceEditor({ data, onChange, onArrayChange, onAddItem, onRemoveItem }: EditorProps) {
-    const experiences = data.experience || [];
+    const experiences = data.work_experience || [];
 
     return (
         <div className="space-y-6">
@@ -498,7 +572,7 @@ function ExperienceEditor({ data, onChange, onArrayChange, onAddItem, onRemoveIt
                             <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => onRemoveItem?.("experience", index)}
+                                onClick={() => onRemoveItem?.("work_experience", index)}
                                 className="text-destructive"
                             >
                                 Remove
@@ -510,7 +584,7 @@ function ExperienceEditor({ data, onChange, onArrayChange, onAddItem, onRemoveIt
                                 <Label>Job Title</Label>
                                 <Input
                                     value={exp.title || ""}
-                                    onChange={(e) => onArrayChange?.("experience", index, { ...exp, title: e.target.value })}
+                                    onChange={(e) => onArrayChange?.("work_experience", index, { ...exp, title: e.target.value })}
                                     placeholder="Software Engineer"
                                 />
                             </div>
@@ -519,54 +593,47 @@ function ExperienceEditor({ data, onChange, onArrayChange, onAddItem, onRemoveIt
                                 <Label>Company</Label>
                                 <Input
                                     value={exp.company || ""}
-                                    onChange={(e) => onArrayChange?.("experience", index, { ...exp, company: e.target.value })}
+                                    onChange={(e) => onArrayChange?.("work_experience", index, { ...exp, company: e.target.value })}
                                     placeholder="Company Name"
                                 />
                             </div>
 
                             <div>
-                                <Label>Duration</Label>
+                                <Label>From Year</Label>
                                 <Input
-                                    value={exp.duration || ""}
-                                    onChange={(e) => onArrayChange?.("experience", index, { ...exp, duration: e.target.value })}
-                                    placeholder="Jan 2020 - Present"
+                                    value={exp.from_year || ""}
+                                    onChange={(e) => onArrayChange?.("work_experience", index, { ...exp, from_year: e.target.value })}
+                                    placeholder="2020"
                                 />
                             </div>
 
                             <div>
+                                <Label>To Year</Label>
+                                <Input
+                                    value={exp.to_year || ""}
+                                    onChange={(e) => onArrayChange?.("work_experience", index, { ...exp, to_year: e.target.value })}
+                                    placeholder="Present"
+                                />
+                            </div>
+
+                            <div className="md:col-span-2">
                                 <Label>Location</Label>
                                 <Input
                                     value={exp.location || ""}
-                                    onChange={(e) => onArrayChange?.("experience", index, { ...exp, location: e.target.value })}
+                                    onChange={(e) => onArrayChange?.("work_experience", index, { ...exp, location: e.target.value })}
                                     placeholder="City, State"
                                 />
                             </div>
                         </div>
 
                         <div className="mb-4">
-                            <Label>Description</Label>
+                            <Label>Summary</Label>
                             <Textarea
-                                value={exp.description || ""}
-                                onChange={(e) => onArrayChange?.("experience", index, { ...exp, description: e.target.value })}
-                                placeholder="Brief description of your role and responsibilities..."
+                                value={exp.summary || ""}
+                                onChange={(e) => onArrayChange?.("work_experience", index, { ...exp, summary: e.target.value })}
+                                placeholder="Brief summary of your role and responsibilities..."
                                 rows={3}
                             />
-                        </div>
-
-                        <div>
-                            <Label>Key Achievements</Label>
-                            <Textarea
-                                value={exp.achievements?.join("\n") || ""}
-                                onChange={(e) => onArrayChange?.("experience", index, {
-                                    ...exp,
-                                    achievements: e.target.value.split("\n").filter(a => a.trim())
-                                })}
-                                placeholder="• Achievement 1&#10;• Achievement 2&#10;• Achievement 3"
-                                rows={4}
-                            />
-                            <p className="text-sm text-muted-foreground mt-1">
-                                Enter each achievement on a new line, starting with •
-                            </p>
                         </div>
                     </CardContent>
                 </Card>
@@ -574,13 +641,14 @@ function ExperienceEditor({ data, onChange, onArrayChange, onAddItem, onRemoveIt
 
             <Button
                 variant="outline"
-                onClick={() => onAddItem?.("experience", {
+                onClick={() => onAddItem?.("work_experience", {
                     title: "",
                     company: "",
-                    duration: "",
+                    from_year: "",
+                    to_year: "",
                     location: "",
-                    description: "",
-                    achievements: []
+                    summary: "",
+                    projects: []
                 })}
                 className="w-full"
             >
@@ -594,39 +662,17 @@ function SkillsEditor({ data, onChange }: EditorProps) {
     return (
         <div className="space-y-4">
             <div>
-                <Label htmlFor="technical">Technical Skills</Label>
+                <Label htmlFor="skills">Skills</Label>
                 <Textarea
-                    id="technical"
-                    value={data.technical?.join(", ") || ""}
-                    onChange={(e) => onChange("technical", e.target.value.split(",").map((s: string) => s.trim()).filter(Boolean))}
-                    placeholder="JavaScript, Python, React, Node.js, SQL..."
-                    rows={3}
+                    id="skills"
+                    value={data?.join(", ") || ""}
+                    onChange={(e) => onChange("skills", e.target.value.split(",").map((s: string) => s.trim()).filter(Boolean))}
+                    placeholder="JavaScript, Python, React, Node.js, SQL, Leadership, Communication..."
+                    rows={4}
                 />
                 <p className="text-sm text-muted-foreground mt-1">
                     Separate skills with commas
                 </p>
-            </div>
-
-            <div>
-                <Label htmlFor="soft">Soft Skills</Label>
-                <Textarea
-                    id="soft"
-                    value={data.soft?.join(", ") || ""}
-                    onChange={(e) => onChange("soft", e.target.value.split(",").map((s: string) => s.trim()).filter(Boolean))}
-                    placeholder="Leadership, Communication, Problem Solving..."
-                    rows={3}
-                />
-            </div>
-
-            <div>
-                <Label htmlFor="languages">Languages</Label>
-                <Textarea
-                    id="languages"
-                    value={data.languages?.join(", ") || ""}
-                    onChange={(e) => onChange("languages", e.target.value.split(",").map((s: string) => s.trim()).filter(Boolean))}
-                    placeholder="English (Native), Spanish (Fluent), French (Conversational)..."
-                    rows={2}
-                />
             </div>
         </div>
     );
@@ -663,20 +709,38 @@ function EducationEditor({ data, onChange, onArrayChange, onAddItem, onRemoveIte
                             </div>
 
                             <div>
-                                <Label>Institution</Label>
+                                <Label>University</Label>
                                 <Input
-                                    value={edu.institution || ""}
-                                    onChange={(e) => onArrayChange?.("education", index, { ...edu, institution: e.target.value })}
+                                    value={edu.university || ""}
+                                    onChange={(e) => onArrayChange?.("education", index, { ...edu, university: e.target.value })}
                                     placeholder="University Name"
                                 />
                             </div>
 
                             <div>
-                                <Label>Year</Label>
+                                <Label>From Year</Label>
                                 <Input
-                                    value={edu.year || ""}
-                                    onChange={(e) => onArrayChange?.("education", index, { ...edu, year: e.target.value })}
+                                    value={edu.from_year || ""}
+                                    onChange={(e) => onArrayChange?.("education", index, { ...edu, from_year: e.target.value })}
+                                    placeholder="2016"
+                                />
+                            </div>
+
+                            <div>
+                                <Label>To Year</Label>
+                                <Input
+                                    value={edu.to_year || ""}
+                                    onChange={(e) => onArrayChange?.("education", index, { ...edu, to_year: e.target.value })}
                                     placeholder="2020"
+                                />
+                            </div>
+
+                            <div>
+                                <Label>Location</Label>
+                                <Input
+                                    value={edu.location || ""}
+                                    onChange={(e) => onArrayChange?.("education", index, { ...edu, location: e.target.value })}
+                                    placeholder="City, State"
                                 />
                             </div>
 
@@ -697,13 +761,79 @@ function EducationEditor({ data, onChange, onArrayChange, onAddItem, onRemoveIte
                 variant="outline"
                 onClick={() => onAddItem?.("education", {
                     degree: "",
-                    institution: "",
-                    year: "",
+                    university: "",
+                    from_year: "",
+                    to_year: "",
+                    location: "",
                     gpa: ""
                 })}
                 className="w-full"
             >
                 Add Education
+            </Button>
+        </div>
+    );
+}
+
+function ProjectsEditor({ data, onChange, onArrayChange, onAddItem, onRemoveItem }: EditorProps) {
+    const projects = data.projects || [];
+
+    return (
+        <div className="space-y-6">
+            {projects.map((project: any, index: number) => (
+                <Card key={index} className="border-l-4 border-l-primary">
+                    <CardContent className="p-4">
+                        <div className="flex justify-between items-start mb-4">
+                            <h4 className="font-medium">Project #{index + 1}</h4>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => onRemoveItem?.("projects", index)}
+                                className="text-destructive"
+                            >
+                                Remove
+                            </Button>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div>
+                                <Label>Project Name</Label>
+                                <Input
+                                    value={project.name || ""}
+                                    onChange={(e) => onArrayChange?.("projects", index, { ...project, name: e.target.value })}
+                                    placeholder="Project Name"
+                                />
+                            </div>
+
+                            <div>
+                                <Label>Project Bullets</Label>
+                                <Textarea
+                                    value={project.bullets?.join("\n") || ""}
+                                    onChange={(e) => onArrayChange?.("projects", index, {
+                                        ...project,
+                                        bullets: e.target.value.split("\n").filter(b => b.trim())
+                                    })}
+                                    placeholder="• Bullet point 1&#10;• Bullet point 2&#10;• Bullet point 3"
+                                    rows={4}
+                                />
+                                <p className="text-sm text-muted-foreground mt-1">
+                                    Enter each bullet point on a new line, starting with •
+                                </p>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+            ))}
+
+            <Button
+                variant="outline"
+                onClick={() => onAddItem?.("projects", {
+                    name: "",
+                    bullets: []
+                })}
+                className="w-full"
+            >
+                Add Project
             </Button>
         </div>
     );

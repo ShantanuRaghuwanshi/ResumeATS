@@ -86,7 +86,7 @@ async def ollama_extract_sections(
 async def ollama_extract_education(
     text: str, ollama_client: AsyncClient, OLLAMA_MODEL: str
 ):
-    from app.models.resume import EducationEntry
+    from models.resume import EducationEntry
 
     education = []
     try:
@@ -124,7 +124,7 @@ async def ollama_extract_education(
 async def ollama_extract_work_experience(
     text: str, ollama_client: AsyncClient, OLLAMA_MODEL: str
 ):
-    from app.models.resume import WorkExperienceEntry
+    from models.resume import WorkExperienceEntry
 
     work_experience = []
     try:
@@ -162,7 +162,7 @@ async def ollama_extract_work_experience(
 async def ollama_extract_projects(
     text: str, ollama_client: AsyncClient, OLLAMA_MODEL: str
 ):
-    from app.models.resume import ProjectEntry
+    from models.resume import ProjectEntry
 
     projects = []
     try:

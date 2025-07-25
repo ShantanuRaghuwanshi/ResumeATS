@@ -577,6 +577,47 @@ class BackgroundJobService:
         logger.info(f"Cleaned up {len(jobs_to_remove)} old jobs")
         return len(jobs_to_remove)
 
+    async def health_check(self) -> bool:
+        """Perform health check for background job service"""
+        try:
+            # Check if service is running
+            if not self.running:
+                return False
+                
+            # Check if workers are available
+            if self.max_workers <= 0:
+                return False
+                
+            # Check if queue is accessible
+            if not hasattr(self, 'job_queue'):
+                return False
+                
+            # Check if job storage is accessible
+            if not hasattr(self, 'job_storage'):
+                return False
+                
+            # Check statistics functionality
+            stats = self.get_statistics()
+            if not isinstance(stats, dict):
+                return False
+                
+            return True
+        except Exception as e:
+            logger.error(f"BackgroundJobService health check failed: {e}")
+            return False
+
+    async def restart(self):
+        """Restart the background job service"""
+        try:
+            logger.info("Restarting background job service")
+            await self.stop()
+            await asyncio.sleep(1)  # Brief pause
+            await self.start()
+            logger.info("Background job service restarted successfully")
+        except Exception as e:
+            logger.error(f"Failed to restart background job service: {e}")
+            raise
+
 
 # Predefined job functions for common tasks
 

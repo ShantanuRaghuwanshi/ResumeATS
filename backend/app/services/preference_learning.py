@@ -13,14 +13,14 @@ from collections import defaultdict, Counter
 import asyncio
 from dataclasses import dataclass
 
-from app.models.user_preferences import (
+from models.user_preferences import (
     UserProfile,
     SuggestionFeedback,
     UserPreference,
     LearningInsight,
     PersonalizationSettings,
 )
-from app.models.conversation import Suggestion, ResumeContext
+from models.conversation import Suggestion, ResumeContext
 
 
 @dataclass

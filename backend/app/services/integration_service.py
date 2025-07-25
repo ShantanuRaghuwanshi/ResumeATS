@@ -22,9 +22,10 @@ from services.websocket_manager import (
 )
 from services.cache_service import CacheService
 from services.performance_monitor import PerformanceMonitor
-from services.background_jobs import BackgroundJobManager
+from services.background_jobs import BackgroundJobService
 from security.audit_logging import AuditLogger
 from security.security_service import SecurityService
+from services.llm_provider import get_llm_provider
 from configs.config import get_logger
 
 logger = get_logger(__name__)
@@ -57,15 +58,50 @@ class IntegrationService:
     """
 
     def __init__(self):
+        # Initialize default LLM provider for services that require it
+        default_llm_config = {
+            "api_key": "",  # Will be set from environment or config
+            "model": "gpt-3.5-turbo",
+            "temperature": 0.7,
+            "max_tokens": 1000
+        }
+        
+        try:
+            # Try to create OpenAI provider as default, fallback to Ollama if that fails
+            self.default_llm_provider = get_llm_provider("openai", default_llm_config)
+        except Exception:
+            # Fallback to Ollama if OpenAI is not available
+            try:
+                ollama_config = {
+                    "model": "llama2",
+                    "temperature": 0.7,
+                    "max_tokens": 1000
+                }
+                self.default_llm_provider = get_llm_provider("ollama", ollama_config)
+            except Exception as e:
+                logger.error(f"Failed to initialize LLM provider: {e}")
+                # Create a minimal mock provider as last resort
+                from services.llm_provider import LLMProviderBase
+                class MockLLMProvider(LLMProviderBase):
+                    def __init__(self, config):
+                        super().__init__(config)
+                    async def extract_personal_details(self, text):
+                        return None
+                    async def extract_sections(self, text):
+                        return None
+                    async def generate_conversation_response(self, message, context, history, profile=None):
+                        return None
+                self.default_llm_provider = MockLLMProvider({})
+        
         # Initialize service instances
         self.conversation_manager = ConversationManager()
         self.section_optimizer = SectionOptimizer()
-        self.job_matcher = JobMatcher()
+        self.job_matcher = JobMatcher(self.default_llm_provider)
         self.feedback_analyzer = FeedbackAnalyzer()
         self.version_manager = VersionManager()
         self.cache_service = CacheService()
         self.performance_monitor = PerformanceMonitor()
-        self.background_jobs = BackgroundJobManager()
+        self.background_jobs = BackgroundJobService()
         self.audit_logger = AuditLogger()
         self.security_service = SecurityService()
 
@@ -173,7 +209,6 @@ class IntegrationService:
 
         try:
             # Initialize background job manager
-            await self.background_jobs.initialize()
             self.service_status["background_jobs"].mark_healthy()
 
         except Exception as e:

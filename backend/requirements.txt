@@ -10,7 +10,7 @@ spacy
 openai
 requests
 aiofiles
-openai
+ollama
 anthropic
 google-generativeai
 websockets
@@ -28,3 +28,4 @@ slowapi
 python-jose[cryptography]
 passlib[bcrypt]
 python-multipart
+pyjwt

@@ -221,7 +221,7 @@ class SecurityService:
         )
 
         is_allowed, rate_info = rate_limiter.is_allowed(
-            f"{limit_type}:{client_id}", limit, window
+            client_id, limit_type, (limit, window)
         )
 
         if not is_allowed:

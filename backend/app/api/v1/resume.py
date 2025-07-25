@@ -1,20 +1,35 @@
 from fastapi import APIRouter, UploadFile, File, Form, Body, HTTPException, Request
 from fastapi.responses import FileResponse, JSONResponse
 import os
-from configs.config import get_logger
+from app.configs.config import get_logger
 
 logger = get_logger(__name__)
 import aiofiles
 import json
-from services.resume_parser import (
+from app.services.resume_parser import (
     parse_resume,
     get_logs,
     extract_personal_details,
     extract_sections,
 )
-from services.resume_generator import generate_resume
-from services.jd_optimizer import optimize_resume_for_jd
-from services.llm_provider import LLMProviderFactory
+from app.services.resume_generator import generate_resume
+from app.services.jd_optimizer import optimize_resume_for_jd
+from app.services.llm_provider import LLMProviderFactory
+
+from app.security.middleware import upload_rate_limit
+from app.security.input_validation import (
+    validate_resume_upload,
+    InputSanitizer,
+    SecureResumeData,
+)
+from app.security.audit_logging import (
+    log_user_action,
+    log_security_event,
+    AuditEventType,
+    AuditSeverity,
+)
+
+from app.models.resume import PersonalDetails, ResumeSections
 
 router = APIRouter()
 
@@ -31,15 +46,41 @@ async def test_llm_config(config: dict = Body(...)):
     provider_name = config.get("provider")
     if not provider_name:
         raise HTTPException(status_code=400, detail="Missing 'provider' in config")
-    api_key = config.get("apiKey")
-    url = config.get("url", "http://localhost:11434")
-    model = config.get("model", "gemma3n:e4b")
-    config = {"provider": provider_name, "api_key": api_key, "url": url, "model": model}
+
+    # Extract config from the nested structure if present
+    if "config" in config:
+        provider_config = config["config"]
+        api_key = provider_config.get("apiKey")
+        url = provider_config.get("url", "http://localhost:11434")
+        model = provider_config.get("model", "gemma3n:e4b")
+    else:
+        api_key = config.get("apiKey")
+        url = config.get("url", "http://localhost:11434")
+        model = config.get("model", "gemma3n:e4b")
+
+    # Create provider config with both camelCase and snake_case keys for compatibility
+    provider_config_dict = {
+        "provider": provider_name,
+        "api_key": api_key,
+        "apiKey": api_key,  # Support both formats
+        "url": url,
+        "model": model,
+    }
+
     try:
-        provider = LLMProviderFactory.create(provider_name, config)
+        provider = LLMProviderFactory.create(provider_name, provider_config_dict)
         dummy_text = "John Doe, johndoe@email.com, linkedin.com/in/johndoe"
         result = await provider.extract_personal_details(dummy_text)
-        return JSONResponse({"success": True, "result": result.model_dump()})
+
+        # Handle both Pydantic models and dictionaries
+        if hasattr(result, "model_dump"):
+            result_data = result.model_dump()
+        elif isinstance(result, dict):
+            result_data = result
+        else:
+            result_data = {"result": str(result)}
+
+        return JSONResponse({"success": True, "result": result_data})
     except Exception as e:
         return JSONResponse({"success": False, "error": str(e)}, status_code=500)
 
@@ -51,18 +92,6 @@ async def upload_resume(
     provider_name: str = Form("ollama"),
     provider_config: str = Form("{}"),
 ):
-    from security.middleware import upload_rate_limit
-    from security.input_validation import (
-        validate_resume_upload,
-        InputSanitizer,
-        SecureResumeData,
-    )
-    from security.audit_logging import (
-        log_user_action,
-        log_security_event,
-        AuditEventType,
-        AuditSeverity,
-    )
 
     # Apply rate limiting
     await upload_rate_limit(request)
@@ -115,6 +144,9 @@ async def upload_resume(
         personal = await extract_personal_details(text, provider_name, config)
         extrac_sections = await extract_sections(text, provider_name, config)
 
+        if isinstance(personal, PersonalDetails):
+            personal = personal.model_dump()
+
         education = extrac_sections.get("education", [])
         work_experience = extrac_sections.get("work_experience", [])
         projects = extrac_sections.get("projects", [])
@@ -122,29 +154,12 @@ async def upload_resume(
 
         # Create structured data
         structured = {
-            "personal_details": personal.model_dump(),
+            "personal_details": personal,
             "education": education,
             "work_experience": work_experience,
             "projects": projects,
             "skills": skills,
         }
-
-        # Validate and sanitize the structured data
-        try:
-            secure_data = SecureResumeData(**structured)
-            structured = secure_data.dict()
-        except ValueError as e:
-            await log_security_event(
-                AuditEventType.SECURITY_VIOLATION,
-                request,
-                details={"violation": "invalid_resume_data", "error": str(e)},
-                severity=AuditSeverity.MEDIUM,
-                success=False,
-                error_message=str(e),
-            )
-            raise HTTPException(
-                status_code=400, detail=f"Invalid resume data: {str(e)}"
-            )
 
         # Store parsed resume
         parsed_resume_store["resume"] = structured

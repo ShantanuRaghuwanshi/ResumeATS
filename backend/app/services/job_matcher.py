@@ -1362,3 +1362,25 @@ class JobMatcher:
         except Exception as e:
             logger.warning(f"LLM call failed: {str(e)}")
             return ""
+
+    async def health_check(self) -> bool:
+        """Perform health check for job matcher"""
+        try:
+            # Check if LLM provider is available
+            if self.llm_provider is None:
+                return False
+                
+            # Check if skill categories are loaded
+            if not hasattr(self, 'skill_categories') or not self.skill_categories:
+                return False
+                
+            # Check if we can perform basic text processing
+            test_text = "test job description"
+            result = self._extract_skills_fallback(test_text, ["python"])
+            if result is None:
+                return False
+                
+            return True
+        except Exception as e:
+            logger.error(f"JobMatcher health check failed: {e}")
+            return False

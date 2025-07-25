@@ -6,9 +6,9 @@ from typing import List, Dict, Any
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 
-from app.models.user_preferences import UserProfile, SuggestionFeedback, LearningInsight
-from app.models.conversation import ResumeContext, Suggestion
-from app.services.preference_learning import preference_learning_service
+from models.user_preferences import UserProfile, SuggestionFeedback, LearningInsight
+from models.conversation import ResumeContext, Suggestion
+from services.preference_learning import preference_learning_service
 
 router = APIRouter(prefix="/preference-learning", tags=["preference-learning"])
 

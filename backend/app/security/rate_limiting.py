@@ -4,7 +4,7 @@ Rate limiting middleware and utilities for API security
 
 import time
 import asyncio
-from typing import Dict, Optional, Tuple
+from typing import Dict, Optional, Tuple, Any
 from fastapi import Request, HTTPException
 from fastapi.responses import JSONResponse
 import redis
@@ -39,7 +39,7 @@ class InMemoryRateLimiter:
 
     def is_allowed(
         self, key: str, limit: int, window: int
-    ) -> Tuple[bool, Dict[str, any]]:
+    ) -> Tuple[bool, Dict[str, Any]]:
         """
         Check if request is allowed based on rate limit
 
@@ -98,7 +98,7 @@ class RedisRateLimiter:
 
     def is_allowed(
         self, key: str, limit: int, window: int
-    ) -> Tuple[bool, Dict[str, any]]:
+    ) -> Tuple[bool, Dict[str, Any]]:
         """Check if request is allowed using Redis sliding window"""
         if not self.available:
             return self.fallback.is_allowed(key, limit, window)
@@ -275,7 +275,7 @@ class AdaptiveRateLimiter:
             return (strict_limit, window)
 
     def is_allowed(
-        self, client_id: str, limit_type: str
+        self, client_id: str, limit_type: str, custom_limit: Optional[Tuple[int, int]] = None
     ) -> Tuple[bool, Dict[str, Any]]:
         """Check if request is allowed with adaptive limits"""
         if self.is_blocked(client_id):
@@ -289,7 +289,11 @@ class AdaptiveRateLimiter:
                 "reason": "blocked",
             }
 
-        limit, window = self.get_adaptive_limits(client_id, limit_type)
+        if custom_limit:
+            limit, window = custom_limit
+        else:
+            limit, window = self.get_adaptive_limits(client_id, limit_type)
+        
         key = f"{limit_type}:{client_id}"
 
         return self.base_limiter.is_allowed(key, limit, window)
@@ -335,16 +339,8 @@ async def check_rate_limit(
     """
     client_id = get_client_identifier(request)
 
-    # Get rate limit configuration
-    if custom_limit:
-        limit, window = custom_limit
-    else:
-        limit, window = RateLimitConfig.DEFAULT_LIMITS.get(limit_type, (100, 60))
-
-    # Check rate limit
-    is_allowed, rate_info = rate_limiter.is_allowed(
-        f"{limit_type}:{client_id}", limit, window
-    )
+    # Check rate limit using adaptive rate limiter
+    is_allowed, rate_info = rate_limiter.is_allowed(client_id, limit_type, custom_limit)
 
     if not is_allowed:
         headers = {
@@ -414,7 +410,7 @@ class RateLimitMiddleware:
         limit, window = self.default_limit
 
         is_allowed, rate_info = rate_limiter.is_allowed(
-            f"global:{client_id}", limit, window
+            client_id, "global", (limit, window)
         )
 
         if not is_allowed:

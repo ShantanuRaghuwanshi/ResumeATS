@@ -11,6 +11,7 @@ from security.authentication import require_authentication, require_role, UserRo
 from security.monitoring import security_monitor, ThreatLevel, AttackType
 from security.audit_logging import audit_logger, AuditEventType, AuditSeverity
 from security.rate_limiting import rate_limiter
+from fastapi import Depends
 from configs.config import get_logger
 
 logger = get_logger(__name__)
@@ -25,7 +26,7 @@ async def get_security_alerts(
     threat_level: Optional[str] = Query(None),
     attack_type: Optional[str] = Query(None),
     limit: int = Query(100, ge=1, le=1000),
-    current_user: Dict[str, Any] = Depends(require_role(UserRole.ADMIN)),
+    current_user: Dict[str, Any] = Depends(require_role),
 ):
     """Get security alerts (Admin only)"""
 
@@ -105,7 +106,7 @@ async def get_security_alerts(
 @router.get("/security/summary")
 async def get_security_summary(
     request: Request,
-    current_user: Dict[str, Any] = Depends(require_role(UserRole.ADMIN)),
+    current_user: Dict[str, Any] = Depends(require_role)
 ):
     """Get security monitoring summary (Admin only)"""
 
@@ -132,7 +133,7 @@ async def block_ip_address(
     ip_address: str,
     request: Request,
     reason: str = Body(...),
-    current_user: Dict[str, Any] = Depends(require_role(UserRole.ADMIN)),
+    current_user: Dict[str, Any] = Depends(require_role)
 ):
     """Block an IP address (Admin only)"""
 
@@ -180,7 +181,7 @@ async def block_ip_address(
 async def unblock_ip_address(
     ip_address: str,
     request: Request,
-    current_user: Dict[str, Any] = Depends(require_role(UserRole.ADMIN)),
+    current_user: Dict[str, Any] = Depends(require_role),
 ):
     """Unblock an IP address (Admin only)"""
 
@@ -228,7 +229,7 @@ async def unblock_ip_address(
 @router.get("/security/blocked-ips")
 async def get_blocked_ips(
     request: Request,
-    current_user: Dict[str, Any] = Depends(require_role(UserRole.ADMIN)),
+    current_user: Dict[str, Any] = Depends(require_role),
 ):
     """Get list of blocked IP addresses (Admin only)"""
 
@@ -269,7 +270,7 @@ async def get_blocked_ips(
 async def mark_false_positive(
     alert_id: str,
     request: Request,
-    current_user: Dict[str, Any] = Depends(require_role(UserRole.ADMIN)),
+    current_user: Dict[str, Any] = Depends(require_role),
 ):
     """Mark a security alert as false positive (Admin only)"""
 
@@ -318,7 +319,7 @@ async def get_audit_logs(
     user_id: Optional[str] = Query(None),
     hours: int = Query(24, ge=1, le=168),
     limit: int = Query(100, ge=1, le=1000),
-    current_user: Dict[str, Any] = Depends(require_role(UserRole.ADMIN)),
+    current_user: Dict[str, Any] = Depends(require_role),
 ):
     """Get audit logs (Admin only)"""
 
@@ -370,7 +371,7 @@ async def get_audit_logs(
 @router.get("/security/rate-limits")
 async def get_rate_limit_status(
     request: Request,
-    current_user: Dict[str, Any] = Depends(require_role(UserRole.ADMIN)),
+    current_user: Dict[str, Any] = Depends(require_role),
 ):
     """Get rate limiting status and statistics (Admin only)"""
 
@@ -424,7 +425,7 @@ async def get_rate_limit_status(
 async def cleanup_security_data(
     request: Request,
     days: int = Body(7, ge=1, le=30),
-    current_user: Dict[str, Any] = Depends(require_role(UserRole.ADMIN)),
+    current_user: Dict[str, Any] = Depends(require_role),
 ):
     """Cleanup old security data (Admin only)"""
 

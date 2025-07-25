@@ -17,9 +17,9 @@ import json
 import asyncio
 from datetime import datetime
 
-from services.conversation_manager import ConversationManager
-from models.conversation import ConversationSession, Message, AIResponse
-from configs.config import get_logger
+from app.services.conversation_manager import ConversationManager
+from app.models.conversation import ConversationSession, Message, AIResponse
+from app.configs.config import get_logger
 
 logger = get_logger(__name__)
 

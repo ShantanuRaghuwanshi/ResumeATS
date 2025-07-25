@@ -10,8 +10,7 @@ from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional, Union, Callable
 from dataclasses import dataclass
 from enum import Enum
-import redis
-import aioredis
+import redis.asyncio as aioredis
 from functools import wraps
 import logging
 
@@ -538,6 +537,36 @@ class CacheService:
         stats = self.get_cache_stats()
         stats["redis_cache"] = await self.redis_cache.get_stats()
         return stats
+
+    async def health_check(self) -> bool:
+        """Perform health check for cache service"""
+        try:
+            # Check if memory cache is functional
+            test_key = "health_check_test"
+            test_value = "test_data"
+            
+            # Test memory cache
+            self.memory_cache.set(test_key, test_value)
+            if self.memory_cache.get(test_key) != test_value:
+                return False
+            self.memory_cache.delete(test_key)
+            
+            # Test Redis cache if available
+            try:
+                await self.redis_cache.set(test_key, test_value, 10)
+                cached_value = await self.redis_cache.get(test_key)
+                if cached_value != test_value:
+                    return False
+                await self.redis_cache.delete(test_key)
+            except Exception as e:
+                logger.warning(f"Redis health check failed: {e}")
+                # Redis failure is not critical if memory cache works
+                pass
+                
+            return True
+        except Exception as e:
+            logger.error(f"CacheService health check failed: {e}")
+            return False
 
 
 # Cache decorators for easy use

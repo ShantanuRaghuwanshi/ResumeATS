@@ -1,11 +1,11 @@
 import os
-from app.configs.config import get_logger
+from configs.config import get_logger
 
 logger = get_logger(__name__)
 import json
 import re
 from typing import Dict
-from app.models.resume import PersonalDetails, ResumeSections
+from models.resume import PersonalDetails, ResumeSections
 
 # Use a custom client to allow custom host (API URL)
 
@@ -81,7 +81,7 @@ async def extract_sections(text: str, client, model) -> Dict:
 
 
 async def extract_education(text: str, client, model):
-    from app.models.resume import EducationEntry
+    from models.resume import EducationEntry
 
     education = []
     try:
@@ -117,7 +117,7 @@ async def extract_education(text: str, client, model):
 
 
 async def extract_work_experience(text: str, client, model):
-    from app.models.resume import WorkExperienceEntry
+    from models.resume import WorkExperienceEntry
 
     work_experience = []
     try:
@@ -153,7 +153,7 @@ async def extract_work_experience(text: str, client, model):
 
 
 async def extract_projects(text: str, client, model):
-    from app.models.resume import ProjectEntry
+    from models.resume import ProjectEntry
 
     projects = []
     try:

@@ -1198,3 +1198,29 @@ class FeedbackAnalyzer:
         except Exception as e:
             logger.error(f"Error calculating structure score: {e}")
             return 0.5
+
+    async def health_check(self) -> bool:
+        """Perform health check for feedback analyzer"""
+        try:
+            # Check if database is accessible
+            if self.db is None:
+                return False
+                
+            # Test basic functionality with sample data
+            sample_before = {"content": "Sample content"}
+            sample_after = {"content": "Updated sample content"}
+            
+            # Test change type determination
+            change_type = self._determine_change_type(sample_before, sample_after)
+            if change_type is None:
+                return False
+                
+            # Test readability calculation
+            score = await self._calculate_readability_score("This is a test sentence.")
+            if score < 0 or score > 1:
+                return False
+                
+            return True
+        except Exception as e:
+            logger.error(f"FeedbackAnalyzer health check failed: {e}")
+            return False

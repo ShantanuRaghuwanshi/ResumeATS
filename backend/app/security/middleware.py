@@ -3,7 +3,7 @@ Security middleware integration for the FastAPI application
 """
 
 from fastapi import FastAPI, Request, HTTPException
-from fastapi.middleware.base import BaseHTTPMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
 from fastapi.responses import JSONResponse
 import time
 from typing import Callable

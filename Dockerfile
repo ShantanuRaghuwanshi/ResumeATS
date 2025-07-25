@@ -80,4 +80,4 @@ ENV PYTHONUNBUFFERED=1
 ENV NODE_ENV=production
 
 # Start command
-CMD ["python", "-m", "uvicorn", "backend.app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["python", "-m", "uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]

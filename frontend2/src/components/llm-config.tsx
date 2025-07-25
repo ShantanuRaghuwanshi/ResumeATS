@@ -11,6 +11,7 @@ import { ArrowLeft, ArrowRight, Brain, Bot, Star, Server } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { cn, getApiUrl } from "@/lib/utils";
+import { useLLMConfig } from "@/contexts/llm-context";
 
 interface LLMConfigProps {
   onNext: () => void;
@@ -49,6 +50,7 @@ export default function LLMConfig({ onNext, onBack }: LLMConfigProps) {
   const [selectedProvider, setSelectedProvider] = useState<LLMProvider>("ollama");
   const [isTestingConnection, setIsTestingConnection] = useState(false);
   const { toast } = useToast();
+  const { setLLMConfig } = useLLMConfig();
 
   const providers = [
     {
@@ -139,17 +141,20 @@ export default function LLMConfig({ onNext, onBack }: LLMConfigProps) {
         throw new Error(error.message || "Connection test failed");
       }
 
-      // Save configuration
-      // await apiRequest("POST", `${apiUrl}/llm/config`, {
-      //   userId: 1, // Mock user ID
-      //   provider: data.provider,
-      //   config: data,
-      // });
+      // Save configuration to context
+      setLLMConfig({
+        provider: data.provider,
+        apiKey: data.apiKey,
+        url: data.url,
+        model: data.model,
+        organizationId: data.organizationId,
+        deploymentName: data.deploymentName,
+      });
 
-      // toast({
-      //   title: "Configuration saved",
-      //   description: "LLM configuration has been saved successfully.",
-      // });
+      toast({
+        title: "Configuration saved",
+        description: "LLM configuration has been saved successfully.",
+      });
 
       onNext();
     } catch (error) {

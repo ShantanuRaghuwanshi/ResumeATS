@@ -82,6 +82,8 @@ async def get_section_suggestions(
     section: str = Body(...),
     content: Any = Body(...),
     focus_areas: Optional[List[str]] = Body(None),
+    llm_provider: Optional[str] = Body("ollama"),
+    llm_config: Optional[Dict[str, Any]] = Body(None),
 ):
     """Generate improvement suggestions for a resume section"""
 
@@ -94,9 +96,14 @@ async def get_section_suggestions(
             full_resume_data={"current_section_data": content},
         )
 
-        # Generate suggestions
+        # Generate suggestions using the specified LLM provider
         suggestions = await section_optimizer.suggest_improvements(
-            section=section, content=content, context=context, focus_areas=focus_areas
+            section=section, 
+            content=content, 
+            context=context, 
+            focus_areas=focus_areas,
+            llm_provider=llm_provider or "ollama",
+            llm_config=llm_config or {}
         )
 
         return JSONResponse(

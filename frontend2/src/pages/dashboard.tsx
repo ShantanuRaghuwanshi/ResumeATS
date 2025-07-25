@@ -54,13 +54,13 @@ export default function Dashboard() {
       case "upload":
         return <FileUpload onResumeUploaded={handleResumeUploaded} onNext={() => handleStepChange("parsing")} />;
       case "parsing":
-        return resumeId ? (
+        return (
           <ResumeAnalysis
-            resumeId={resumeId}
+            resumeId={resumeId || 1} // Use 1 as default since backend stores the last parsed resume
             onNext={() => handleStepChange("job-analysis")}
-            onBack={() => handleStepChange("llm-config")}
+            onBack={() => handleStepChange("upload")}
           />
-        ) : null;
+        );
       case "job-analysis":
         return resumeId ? (
           <JobAnalysisInterface
@@ -127,6 +127,9 @@ export default function Dashboard() {
               <Button variant="outline" size="sm" onClick={() => handleStepChange("system-status")}>
                 <Activity className="w-4 h-4 mr-2" />
                 Status
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => handleStepChange("parsing")}>
+                Test Analysis
               </Button>
               <Button variant="outline" size="sm">
                 <HelpCircle className="w-4 h-4 mr-2" />

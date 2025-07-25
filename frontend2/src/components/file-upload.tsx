@@ -2,9 +2,11 @@ import { useState, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { CloudUploadIcon, FileIcon, X, ArrowRight } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { ArrowLeft, ArrowRight, Upload, FileText, AlertTriangle, Cloud, File, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { getApiUrl } from "@/lib/utils";
+import { cn, getApiUrl } from "@/lib/utils";
+import { useLLMConfig } from "@/contexts/llm-context";
 
 interface FileUploadProps {
   onResumeUploaded: (resumeId: number) => void;
@@ -21,6 +23,7 @@ export default function FileUpload({ onResumeUploaded, onNext }: FileUploadProps
   const [uploadedFile, setUploadedFile] = useState<UploadedFile | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const { toast } = useToast();
+  const { llmConfig } = useLLMConfig();
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
@@ -68,8 +71,19 @@ export default function FileUpload({ onResumeUploaded, onNext }: FileUploadProps
     try {
       const formData = new FormData();
       formData.append("file", file);
-      formData.append("provider_name", "ollama"); // default provider
-      formData.append("provider_config", "{}"); // default config
+      
+      // Use configured LLM provider or fallback to ollama
+      const providerName = llmConfig?.provider || "ollama";
+      const providerConfig = llmConfig ? {
+        apiKey: llmConfig.apiKey,
+        url: llmConfig.url,
+        model: llmConfig.model,
+        organizationId: llmConfig.organizationId,
+        deploymentName: llmConfig.deploymentName,
+      } : {};
+      
+      formData.append("provider_name", providerName);
+      formData.append("provider_config", JSON.stringify(providerConfig));
 
       const apiUrl = getApiUrl();
       const response = await fetch(`${apiUrl}/upload_resume/`, {
@@ -123,7 +137,7 @@ export default function FileUpload({ onResumeUploaded, onNext }: FileUploadProps
         <div className="max-w-2xl mx-auto">
           <div className="text-center mb-8">
             <div className="w-16 h-16 bg-primary/10 rounded-xl flex items-center justify-center mx-auto mb-4">
-              <CloudUploadIcon className="text-primary w-8 h-8" />
+              <Cloud className="text-primary w-8 h-8" />
             </div>
             <h3 className="text-2xl font-bold text-slate-800 mb-2">Upload Your Resume</h3>
             <p className="text-slate-600">Upload your resume in PDF or DOC format to get started with AI-powered analysis</p>
@@ -138,7 +152,7 @@ export default function FileUpload({ onResumeUploaded, onNext }: FileUploadProps
                 }`}
             >
               <input {...getInputProps()} />
-              <CloudUploadIcon className="text-slate-400 w-12 h-12 mx-auto mb-4" />
+              <Cloud className="text-slate-400 w-12 h-12 mx-auto mb-4" />
               <p className="text-lg font-medium text-slate-700 mb-2">
                 {isDragActive ? "Drop your resume here" : "Drag and drop your resume here"}
               </p>
@@ -154,7 +168,7 @@ export default function FileUpload({ onResumeUploaded, onNext }: FileUploadProps
             <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <FileIcon className="text-red-500 w-6 h-6" />
+                  <File className="text-red-500 w-6 h-6" />
                   <div>
                     <p className="font-medium text-slate-800">{uploadedFile.name}</p>
                     <p className="text-sm text-slate-600">{uploadedFile.size}</p>
@@ -182,7 +196,7 @@ export default function FileUpload({ onResumeUploaded, onNext }: FileUploadProps
               className="bg-primary text-white hover:bg-blue-600"
               disabled={!uploadedFile || isUploading}
             >
-              <span>Continue to LLM Setup</span>
+              <span>Continue to Resume Analysis</span>
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
           </div>

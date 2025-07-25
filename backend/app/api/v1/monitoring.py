@@ -11,7 +11,7 @@ from services.integration_service import integration_service
 from services.websocket_manager import websocket_manager
 from services.performance_monitor import PerformanceMonitor
 from security.authentication import get_current_user
-from security.decorators import require_admin
+from security.decorators import admin_only
 from configs.logging_config import get_service_logger
 
 logger = get_service_logger("monitoring_api")
@@ -122,7 +122,7 @@ async def get_services_status():
 
 
 @router.post("/services/{service_name}/restart")
-@require_admin
+@admin_only
 async def restart_service(
     service_name: str,
     background_tasks: BackgroundTasks,
@@ -174,7 +174,7 @@ async def _restart_service(service_name: str):
 
 
 @router.get("/circuit-breakers")
-@require_admin
+@admin_only
 async def get_circuit_breakers(current_user=Depends(get_current_user)):
     """Get circuit breaker status (admin only)"""
 
@@ -195,7 +195,7 @@ async def get_circuit_breakers(current_user=Depends(get_current_user)):
 
 
 @router.post("/circuit-breakers/{service_name}/reset")
-@require_admin
+@admin_only
 async def reset_circuit_breaker(
     service_name: str, current_user=Depends(get_current_user)
 ):
@@ -222,7 +222,7 @@ async def reset_circuit_breaker(
 
 
 @router.get("/logs/recent")
-@require_admin
+@admin_only
 async def get_recent_logs(
     service: Optional[str] = None,
     level: Optional[str] = None,
@@ -274,7 +274,7 @@ async def get_performance_summary():
 
 
 @router.post("/maintenance/mode")
-@require_admin
+@admin_only
 async def toggle_maintenance_mode(
     enabled: bool, message: Optional[str] = None, current_user=Depends(get_current_user)
 ):
@@ -344,7 +344,7 @@ async def get_system_info():
 
 
 @router.post("/cleanup/inactive-connections")
-@require_admin
+@admin_only
 async def cleanup_inactive_connections(current_user=Depends(get_current_user)):
     """Cleanup inactive WebSocket connections (admin only)"""
 

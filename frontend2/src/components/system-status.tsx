@@ -33,7 +33,7 @@ interface SystemStatusProps {
 export function SystemStatusComponent({
     showDetailed = false,
     autoRefresh = true,
-    refreshInterval = 30000
+    refreshInterval = 5000000
 }: SystemStatusProps) {
     const { toast } = useToast();
     const [isRefreshing, setIsRefreshing] = useState(false);
@@ -49,13 +49,15 @@ export function SystemStatusComponent({
         queryFn: () => integrationService.checkSystemHealth(),
         refetchInterval: autoRefresh ? refreshInterval : false,
         refetchIntervalInBackground: true,
-        onError: (error) => {
-            console.error('Failed to fetch system status:', error);
-            toast({
-                title: 'Status Check Failed',
-                description: 'Unable to check system status. Some features may be unavailable.',
-                variant: 'destructive',
-            });
+        meta: {
+            onError: (error: Error) => {
+                console.error('Failed to fetch system status:', error);
+                toast({
+                    title: 'Status Check Failed',
+                    description: 'Unable to check system status. Some features may be unavailable.',
+                    variant: 'destructive',
+                });
+            },
         },
     });
 
@@ -120,7 +122,7 @@ export function SystemStatusComponent({
     const getOverallStatusIcon = () => {
         if (isLoading) return <RefreshCw className="w-5 h-5 animate-spin" />;
         if (error) return <WifiOff className="w-5 h-5 text-red-500" />;
-        if (systemStatus?.overall_healthy) return <CheckCircle className="w-5 h-5 text-green-500" />;
+        if ((systemStatus as SystemStatus)?.overall_healthy) return <CheckCircle className="w-5 h-5 text-green-500" />;
         return <AlertTriangle className="w-5 h-5 text-yellow-500" />;
     };
 
@@ -132,7 +134,7 @@ export function SystemStatusComponent({
                 <span className="text-sm text-slate-600">
                     {isLoading ? 'Checking...' :
                         error ? 'Offline' :
-                            systemStatus?.overall_healthy ? 'All systems operational' : 'Some issues detected'}
+                            (systemStatus as SystemStatus)?.overall_healthy ? 'All systems operational' : 'Some issues detected'}
                 </span>
                 <Button
                     variant="ghost"
@@ -159,7 +161,7 @@ export function SystemStatusComponent({
                                 <CardDescription>
                                     {isLoading ? 'Checking system health...' :
                                         error ? 'Unable to connect to monitoring service' :
-                                            systemStatus?.overall_healthy ? 'All systems are operational' : 'Some services are experiencing issues'}
+                                            (systemStatus as SystemStatus)?.overall_healthy ? 'All systems are operational' : 'Some services are experiencing issues'}
                                 </CardDescription>
                             </div>
                         </div>
@@ -187,7 +189,14 @@ export function SystemStatusComponent({
                     {/* Services Tab */}
                     <TabsContent value="services">
                         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                            {Object.entries(systemStatus.services).map(([serviceName, serviceStatus]) => (
+                            {systemStatus?.services ? Object.entries(systemStatus.services).map(([serviceName, serviceStatus]) => {
+                                const service = serviceStatus as {
+                                    healthy: boolean;
+                                    last_check: string;
+                                    error_count: number;
+                                    last_error?: string;
+                                };
+                                return (
                                 <Card key={serviceName}>
                                     <CardHeader className="pb-3">
                                         <div className="flex items-center justify-between">
@@ -197,30 +206,34 @@ export function SystemStatusComponent({
                                                     {serviceName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
                                                 </CardTitle>
                                             </div>
-                                            {getStatusBadge(serviceStatus.healthy)}
+                                            {getStatusBadge(service.healthy)}
                                         </div>
                                     </CardHeader>
                                     <CardContent>
                                         <div className="space-y-2 text-sm">
                                             <div className="flex justify-between">
                                                 <span className="text-slate-600">Last Check:</span>
-                                                <span>{new Date(serviceStatus.last_check).toLocaleTimeString()}</span>
+                                                <span>{new Date(service.last_check).toLocaleTimeString()}</span>
                                             </div>
                                             <div className="flex justify-between">
                                                 <span className="text-slate-600">Error Count:</span>
-                                                <span className={serviceStatus.error_count > 0 ? 'text-red-600' : 'text-green-600'}>
-                                                    {serviceStatus.error_count}
+                                                <span className={service.error_count > 0 ? 'text-red-600' : 'text-green-600'}>
+                                                    {service.error_count}
                                                 </span>
                                             </div>
-                                            {serviceStatus.last_error && (
+                                            {service.last_error && (
                                                 <div className="mt-2 p-2 bg-red-50 rounded text-xs text-red-700">
-                                                    {serviceStatus.last_error}
+                                                    {service.last_error}
                                                 </div>
                                             )}
                                         </div>
                                     </CardContent>
                                 </Card>
-                            ))}
+                            )}) : (
+                                <div className="col-span-full text-center text-gray-500 py-8">
+                                    No service data available
+                                </div>
+                            )}
                         </div>
                     </TabsContent>
 
@@ -232,24 +245,30 @@ export function SystemStatusComponent({
                                 <CardDescription>Real-time connection statistics</CardDescription>
                             </CardHeader>
                             <CardContent>
-                                <div className="space-y-4">
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-sm font-medium">Active Connections:</span>
-                                        <Badge variant="outline">
-                                            {systemStatus.websocket_connections.active_connections}
-                                        </Badge>
-                                    </div>
+                                {(systemStatus as SystemStatus)?.websocket_connections ? (
+                                    <div className="space-y-4">
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-sm font-medium">Active Connections:</span>
+                                            <Badge variant="outline">
+                                                {(systemStatus as SystemStatus).websocket_connections.active_connections}
+                                            </Badge>
+                                        </div>
 
-                                    <div className="space-y-2">
-                                        <span className="text-sm font-medium">By Type:</span>
-                                        {Object.entries(systemStatus.websocket_connections.connections_by_type).map(([type, count]) => (
-                                            <div key={type} className="flex items-center justify-between text-sm">
-                                                <span className="text-slate-600 capitalize">{type}:</span>
-                                                <span>{count}</span>
-                                            </div>
-                                        ))}
+                                        <div className="space-y-2">
+                                            <span className="text-sm font-medium">By Type:</span>
+                                            {Object.entries((systemStatus as SystemStatus).websocket_connections.connections_by_type).map(([type, count]) => (
+                                                <div key={type} className="flex items-center justify-between text-sm">
+                                                    <span className="text-slate-600 capitalize">{type}:</span>
+                                                    <span>{count as number}</span>
+                                                </div>
+                                            ))}
+                                        </div>
                                     </div>
-                                </div>
+                                ) : (
+                                    <div className="text-center text-gray-500 py-8">
+                                        No connection data available
+                                    </div>
+                                )}
                             </CardContent>
                         </Card>
                     </TabsContent>
@@ -288,26 +307,32 @@ export function SystemStatusComponent({
                                 <CardDescription>Service circuit breaker status</CardDescription>
                             </CardHeader>
                             <CardContent>
-                                <div className="space-y-4">
-                                    {Object.entries(systemStatus.circuit_breakers).map(([service, breaker]) => (
-                                        <div key={service} className="flex items-center justify-between p-3 border rounded">
-                                            <div className="flex items-center space-x-3">
-                                                {getServiceIcon(service)}
-                                                <span className="font-medium">
-                                                    {service.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                                                </span>
+                                {(systemStatus as SystemStatus)?.circuit_breakers ? (
+                                    <div className="space-y-4">
+                                        {Object.entries((systemStatus as SystemStatus).circuit_breakers).map(([service, breaker]) => (
+                                            <div key={service} className="flex items-center justify-between p-3 border rounded">
+                                                <div className="flex items-center space-x-3">
+                                                    {getServiceIcon(service)}
+                                                    <span className="font-medium">
+                                                        {service.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                                    </span>
+                                                </div>
+                                                <div className="flex items-center space-x-2">
+                                                    <Badge variant={(breaker as any)?.state === 'closed' ? 'default' : 'destructive'}>
+                                                        {(breaker as any)?.state}
+                                                    </Badge>
+                                                    <span className="text-sm text-slate-600">
+                                                        Failures: {(breaker as any)?.failure_count}
+                                                    </span>
+                                                </div>
                                             </div>
-                                            <div className="flex items-center space-x-2">
-                                                <Badge variant={breaker.state === 'closed' ? 'default' : 'destructive'}>
-                                                    {breaker.state}
-                                                </Badge>
-                                                <span className="text-sm text-slate-600">
-                                                    Failures: {breaker.failure_count}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="text-center text-gray-500 py-8">
+                                        No circuit breaker data available
+                                    </div>
+                                )}
                             </CardContent>
                         </Card>
                     </TabsContent>

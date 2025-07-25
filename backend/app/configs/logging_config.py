@@ -9,11 +9,6 @@ import json
 from datetime import datetime
 from typing import Dict, Any, Optional
 from pathlib import Path
-import os
-
-from configs.config import get_settings
-
-settings = get_settings()
 
 
 class JSONFormatter(logging.Formatter):
@@ -133,20 +128,19 @@ def setup_logging() -> Dict[str, ServiceLogger]:
 
     # Configure root logger
     root_logger = logging.getLogger()
-    root_logger.setLevel(logging.DEBUG if settings.DEBUG else logging.INFO)
+    root_logger.setLevel(logging.INFO)
 
     # Clear existing handlers
     root_logger.handlers.clear()
 
     # Console handler with colored output for development
     console_handler = logging.StreamHandler(sys.stdout)
-    if settings.DEBUG:
-        console_formatter = logging.Formatter(
-            "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-            datefmt="%Y-%m-%d %H:%M:%S",
-        )
-    else:
-        console_formatter = JSONFormatter()
+    console_formatter = logging.Formatter(
+        "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
+    console_handler.setFormatter(console_formatter)
+    console_formatter = JSONFormatter()
     console_handler.setFormatter(console_formatter)
     console_handler.setLevel(logging.INFO)
     root_logger.addHandler(console_handler)

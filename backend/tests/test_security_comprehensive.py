@@ -164,7 +164,7 @@ class TestRateLimiting:
     def test_rate_limiter_allows_normal_requests(self):
         """Test that normal requests are allowed"""
         client_id = "test_client"
-        is_allowed, info = rate_limiter.is_allowed(f"api:{client_id}", 10, 60)
+        is_allowed, info = rate_limiter.is_allowed(client_id, "api", (10, 60))
         assert is_allowed == True
         assert info["remaining"] == 9
 
@@ -174,12 +174,12 @@ class TestRateLimiting:
 
         # Make requests up to the limit
         for i in range(10):
-            is_allowed, info = rate_limiter.is_allowed(f"api:{client_id}", 10, 60)
+            is_allowed, info = rate_limiter.is_allowed(client_id, "api", (10, 60))
             if i < 10:
                 assert is_allowed == True
 
         # Next request should be blocked
-        is_allowed, info = rate_limiter.is_allowed(f"api:{client_id}", 10, 60)
+        is_allowed, info = rate_limiter.is_allowed(client_id, "api", (10, 60))
         assert is_allowed == False
         assert info["retry_after"] is not None
 

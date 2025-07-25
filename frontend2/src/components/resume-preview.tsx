@@ -57,47 +57,53 @@ export default function ResumePreview({ resumeId }: ResumePreviewProps) {
       );
     }
 
-    const { personalDetails, experience, education, skills, projects } = parsedData;
+    const { personal_details, work_experience, education, skills, projects } = parsedData;
 
     return (
       <div className="space-y-6" style={{ transform: `scale(${zoom})`, transformOrigin: 'top left' }}>
         {/* Header */}
-        {personalDetails && (
+        {personal_details && (
           <div className="text-center border-b border-slate-200 pb-4">
             <h1 className="text-2xl font-bold text-slate-800 mb-2">
-              {personalDetails.name || "Your Name"}
+              {personal_details.name || "Your Name"}
             </h1>
             <div className="text-slate-600 space-y-1">
-              {personalDetails.email && (
-                <p>{personalDetails.email}</p>
+              {personal_details.email && (
+                <p>{personal_details.email}</p>
               )}
               <p>
-                {[personalDetails.phone, personalDetails.location]
+                {[personal_details.phone, personal_details.address]
                   .filter(Boolean)
                   .join(" | ")}
               </p>
+              {personal_details.linkedin && (
+                <p>LinkedIn: {personal_details.linkedin}</p>
+              )}
+              {personal_details.github && (
+                <p>GitHub: {personal_details.github}</p>
+              )}
             </div>
           </div>
         )}
 
         {/* Professional Summary */}
-        {personalDetails?.summary && (
+        {personal_details?.summary && (
           <div>
             <h2 className="text-lg font-bold text-slate-800 border-b border-slate-200 pb-2 mb-3">
               Professional Summary
             </h2>
-            <p className="text-slate-700 leading-relaxed">{personalDetails.summary}</p>
+            <p className="text-slate-700 leading-relaxed">{personal_details.summary}</p>
           </div>
         )}
 
         {/* Work Experience */}
-        {experience && experience.length > 0 && (
+        {work_experience && work_experience.length > 0 && (
           <div>
             <h2 className="text-lg font-bold text-slate-800 border-b border-slate-200 pb-2 mb-3">
               Work Experience
             </h2>
             <div className="space-y-4">
-              {experience.map((exp, index) => (
+              {work_experience.map((exp: any, index: number) => (
                 <div key={index}>
                   <div className="flex justify-between items-start mb-2">
                     <div>
@@ -105,20 +111,16 @@ export default function ResumePreview({ resumeId }: ResumePreviewProps) {
                         {exp.title || "Position Title"}
                       </h3>
                       <p className="text-slate-600">{exp.company || "Company Name"}</p>
+                      {exp.location && (
+                        <p className="text-slate-500 text-sm">{exp.location}</p>
+                      )}
                     </div>
                     <span className="text-slate-500 text-sm">
-                      {exp.duration || "Duration"}
+                      {exp.from_year && exp.to_year ? `${exp.from_year} - ${exp.to_year}` : "Duration"}
                     </span>
                   </div>
-                  {exp.description && (
-                    <p className="text-slate-700 mb-2">{exp.description}</p>
-                  )}
-                  {exp.achievements && exp.achievements.length > 0 && (
-                    <ul className="text-slate-700 space-y-1 ml-4">
-                      {exp.achievements.map((achievement, i) => (
-                        <li key={i}>• {achievement}</li>
-                      ))}
-                    </ul>
+                  {exp.summary && (
+                    <p className="text-slate-700 mb-2">{exp.summary}</p>
                   )}
                 </div>
               ))}
@@ -133,16 +135,22 @@ export default function ResumePreview({ resumeId }: ResumePreviewProps) {
               Education
             </h2>
             <div className="space-y-3">
-              {education.map((edu, index) => (
+              {education.map((edu: any, index: number) => (
                 <div key={index} className="flex justify-between items-start">
                   <div>
                     <h3 className="font-semibold text-slate-800">
                       {edu.degree || "Degree"}
                     </h3>
-                    <p className="text-slate-600">{edu.institution || "Institution"}</p>
+                    <p className="text-slate-600">{edu.university || "University"}</p>
+                    {edu.location && (
+                      <p className="text-slate-500 text-sm">{edu.location}</p>
+                    )}
+                    {edu.gpa && (
+                      <p className="text-slate-500 text-sm">GPA: {edu.gpa}</p>
+                    )}
                   </div>
                   <span className="text-slate-500 text-sm">
-                    {edu.year || "Year"}
+                    {edu.from_year && edu.to_year ? `${edu.from_year} - ${edu.to_year}` : "Year"}
                   </span>
                 </div>
               ))}
@@ -151,30 +159,15 @@ export default function ResumePreview({ resumeId }: ResumePreviewProps) {
         )}
 
         {/* Skills */}
-        {skills && (
+        {skills && skills.length > 0 && (
           <div>
             <h2 className="text-lg font-bold text-slate-800 border-b border-slate-200 pb-2 mb-3">
               Skills
             </h2>
             <div className="space-y-2">
-              {skills.technical && skills.technical.length > 0 && (
-                <div>
-                  <h4 className="font-medium text-slate-700 mb-1">Technical Skills</h4>
-                  <p className="text-slate-600">{skills.technical.join(", ")}</p>
-                </div>
-              )}
-              {skills.soft && skills.soft.length > 0 && (
-                <div>
-                  <h4 className="font-medium text-slate-700 mb-1">Soft Skills</h4>
-                  <p className="text-slate-600">{skills.soft.join(", ")}</p>
-                </div>
-              )}
-              {skills.languages && skills.languages.length > 0 && (
-                <div>
-                  <h4 className="font-medium text-slate-700 mb-1">Languages</h4>
-                  <p className="text-slate-600">{skills.languages.join(", ")}</p>
-                </div>
-              )}
+              <div>
+                <p className="text-slate-600">{skills.join(", ")}</p>
+              </div>
             </div>
           </div>
         )}
@@ -186,14 +179,15 @@ export default function ResumePreview({ resumeId }: ResumePreviewProps) {
               Projects
             </h2>
             <div className="space-y-4">
-              {projects.map((project, index) => (
+              {projects.map((project: any, index: number) => (
                 <div key={index}>
                   <h3 className="font-semibold text-slate-800">{project.name}</h3>
-                  <p className="text-slate-700 mb-1">{project.description}</p>
-                  {project.technologies && project.technologies.length > 0 && (
-                    <p className="text-slate-600 text-sm">
-                      <strong>Technologies:</strong> {project.technologies.join(", ")}
-                    </p>
+                  {project.bullets && project.bullets.length > 0 && (
+                    <ul className="text-slate-700 space-y-1 ml-4 mt-2">
+                      {project.bullets.map((bullet: string, i: number) => (
+                        <li key={i}>• {bullet}</li>
+                      ))}
+                    </ul>
                   )}
                 </div>
               ))}

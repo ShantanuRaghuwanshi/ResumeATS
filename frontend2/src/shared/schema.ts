@@ -72,41 +72,45 @@ export const personalDetailsSchema = z.object({
   name: z.string().optional(),
   email: z.string().email().optional(),
   phone: z.string().optional(),
-  location: z.string().optional(),
-  summary: z.string().optional(),
+  address: z.string().optional().nullable(),
+  linkedin: z.string().optional(),
+  github: z.string().optional(),
+  portfolio: z.string().optional().nullable(),
+  website: z.string().optional().nullable(),
+  summary: z.string().optional().nullable(),
+  objective: z.string().optional().nullable(),
 });
 
-export const experienceSchema = z.object({
-  title: z.string(),
+export const workExperienceSchema = z.object({
   company: z.string(),
-  duration: z.string(),
-  description: z.string(),
-  achievements: z.array(z.string()).optional(),
+  title: z.string(),
+  from_year: z.string(),
+  to_year: z.string(),
+  location: z.string(),
+  projects: z.array(z.any()).optional(),
+  summary: z.string(),
 });
 
 export const educationSchema = z.object({
   degree: z.string(),
-  institution: z.string(),
-  year: z.string(),
+  university: z.string(),
+  from_year: z.string(),
+  to_year: z.string(),
   gpa: z.string().optional(),
+  location: z.string(),
 });
 
-export const skillsSchema = z.object({
-  technical: z.array(z.string()).optional(),
-  soft: z.array(z.string()).optional(),
-  languages: z.array(z.string()).optional(),
+export const projectSchema = z.object({
+  name: z.string(),
+  bullets: z.array(z.string()),
 });
 
 export const parsedResumeSchema = z.object({
-  personalDetails: personalDetailsSchema.optional(),
-  experience: z.array(experienceSchema).optional(),
+  personal_details: personalDetailsSchema.optional(),
   education: z.array(educationSchema).optional(),
-  skills: skillsSchema.optional(),
-  projects: z.array(z.object({
-    name: z.string(),
-    description: z.string(),
-    technologies: z.array(z.string()).optional(),
-  })).optional(),
+  work_experience: z.array(workExperienceSchema).optional(),
+  projects: z.array(projectSchema).optional(),
+  skills: z.array(z.string()).optional(),
 });
 
 export const analysisResultSchema = z.object({

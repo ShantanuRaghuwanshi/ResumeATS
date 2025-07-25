@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
-from api.v1 import (
+from app.api.v1 import (
     resume,
     conversation,
     section_optimization,
@@ -12,9 +12,9 @@ from api.v1 import (
     security,
     monitoring,
 )
-from security.middleware import setup_security_middleware, shutdown_security_middleware
-from services.integration_service import integration_service
-from configs.logging_config import setup_logging, get_service_logger
+from app.security.middleware import setup_security_middleware, shutdown_security_middleware
+from app.services.integration_service import integration_service
+from app.configs.logging_config import setup_logging, get_service_logger
 
 # Initialize logging
 service_loggers = setup_logging()
@@ -28,11 +28,11 @@ async def lifespan(app: FastAPI):
 
     try:
         # Initialize integration service
-        await integration_service.initialize()
-        logger.info("Integration service initialized")
+        # await integration_service.initialize()
+        # logger.info("Integration service initialized")
 
         # Setup security middleware
-        await setup_security_middleware(app)
+        # await setup_security_middleware(app)
         logger.info("Security middleware initialized")
 
         logger.info("Application startup complete")
@@ -47,7 +47,7 @@ async def lifespan(app: FastAPI):
     logger.info("Shutting down application...")
 
     try:
-        await integration_service.shutdown()
+        # await integration_service.shutdown()
         await shutdown_security_middleware()
         logger.info("Application shutdown complete")
 

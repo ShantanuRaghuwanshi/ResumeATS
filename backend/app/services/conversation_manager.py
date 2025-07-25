@@ -496,7 +496,6 @@ class ConversationManager:
 
     async def _apply_suggestion_to_resume(
         self,
-        resume_id: str,
         section: str,
         suggestion: Suggestion,
         user_modifications: Optional[str] = None,
@@ -511,3 +510,22 @@ class ConversationManager:
             "modifications": user_modifications,
             "timestamp": datetime.utcnow().isoformat(),
         }
+
+    async def health_check(self) -> bool:
+        """Perform health check for conversation manager"""
+        try:
+            # Check if database is accessible
+            if self.db is None:
+                return False
+            
+            # Check if we can access active sessions
+            if not hasattr(self, 'active_sessions'):
+                return False
+                
+            # Clean up expired sessions as part of health check
+            await self.cleanup_expired_sessions()
+            
+            return True
+        except Exception as e:
+            logger.error(f"ConversationManager health check failed: {e}")
+            return False

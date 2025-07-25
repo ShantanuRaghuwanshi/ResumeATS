@@ -14,7 +14,10 @@ from app.models.user_preferences import UserProfile, SuggestionFeedback
 import json
 import asyncio
 from abc import ABC, abstractmethod
-from datetime import datetime
+from app.configs.config import get_logger
+
+# Setup logger
+logger = get_logger(__name__)
 
 
 class LLMProviderBase(ABC):
@@ -159,7 +162,7 @@ class LLMProviderBase(ABC):
         self, feedback: SuggestionFeedback, user_profile: UserProfile
     ) -> Dict[str, Any]:
         """Process user feedback to improve future suggestions"""
-        from app.services.preference_learning import preference_learning_service
+        from services.preference_learning import preference_learning_service
 
         # Use the preference learning service for advanced feedback processing
         learning_results = await preference_learning_service.process_feedback(
@@ -203,7 +206,7 @@ class LLMProviderBase(ABC):
         context: ResumeContext,
     ) -> List[Suggestion]:
         """Personalize suggestions using machine learning insights"""
-        from app.services.preference_learning import preference_learning_service
+        from services.preference_learning import preference_learning_service
 
         return await preference_learning_service.personalize_suggestions(
             suggestions, user_profile, context
@@ -213,7 +216,7 @@ class LLMProviderBase(ABC):
         self, suggestion: Suggestion, user_profile: UserProfile, context: ResumeContext
     ) -> Dict[str, float]:
         """Predict how user will likely respond to a suggestion"""
-        from app.services.preference_learning import preference_learning_service
+        from services.preference_learning import preference_learning_service
 
         return await preference_learning_service.predict_user_preference(
             suggestion, user_profile, context
@@ -1001,48 +1004,242 @@ class GeminiProvider(LLMProviderBase):
     def __init__(self, config: Dict[str, Any]):
         super().__init__(config)
         self.genai = genai
-        self.api_key = config.get("api_key")
+        self.api_key = config.get("api_key") or config.get(
+            "apiKey"
+        )  # Support both formats
         self.model = config.get("model", "gemini-pro")
+
+        # Ensure we have an API key
+        if not self.api_key:
+            raise ValueError(
+                "Gemini API key is required. Please provide 'api_key' or 'apiKey' in config."
+            )
+
+        # Configure the genai library with the provided API key
         self.genai.configure(api_key=self.api_key)
         self.model_client = genai.GenerativeModel(self.model)
 
-    async def extract_personal_details(self, text: str) -> Dict:
-        """
-        Extract personal details using Gemini API.
-        """
+    def _get_gemini_resume_sections_schema(self):
+        """Create Gemini-compatible schema for resume sections extraction"""
+        return {
+            "type": "object",
+            "properties": {
+                "education": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "university": {"type": "string"},
+                            "degree": {"type": "string"},
+                            "location": {"type": "string"},
+                            "from_year": {"type": "string"},
+                            "to_year": {"type": "string"},
+                            "gpa": {"type": "string"},
+                        },
+                        "required": ["university", "degree"],
+                    },
+                },
+                "work_experience": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "title": {"type": "string"},
+                            "company": {"type": "string"},
+                            "location": {"type": "string"},
+                            "from_year": {"type": "string"},
+                            "to_year": {"type": "string"},
+                            "summary": {"type": "string"},
+                            "projects": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "name": {"type": "string"},
+                                        "summary": {"type": "string"},
+                                        "bullets": {
+                                            "type": "array",
+                                            "items": {"type": "string"},
+                                        },
+                                    },
+                                    "required": ["name"],
+                                },
+                            },
+                        },
+                        "required": ["title", "company"],
+                    },
+                },
+                "projects": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "name": {"type": "string"},
+                            "bullets": {"type": "array", "items": {"type": "string"}},
+                        },
+                        "required": ["name", "bullets"],
+                    },
+                },
+                "skills": {"type": "array", "items": {"type": "string"}},
+            },
+            "required": ["education", "work_experience", "projects", "skills"],
+        }
 
+    def _get_gemini_personal_details_schema(self):
+        """Create Gemini-compatible schema for personal details extraction"""
+        return {
+            "type": "object",
+            "properties": {
+                "name": {"type": "string"},
+                "email": {"type": "string"},
+                "phone": {"type": "string"},
+                "linkedin": {"type": "string"},
+                "github": {"type": "string"},
+                "portfolio": {"type": "string"},
+                "website": {"type": "string"},
+                "address": {"type": "string"},
+                "summary": {"type": "string"},
+            },
+            "required": ["name", "email"],
+        }
+
+    async def extract_personal_details(self, text: str) -> PersonalDetails:
+        """
+        Extract personal details using Gemini API with proper schema.
+        """
         loop = asyncio.get_event_loop()
 
         def sync_call():
+            prompt = f"""
+            Extract personal details from the following resume text. Return as JSON with keys: name, email, phone, linkedin, github, portfolio, website, address, summary.
+            Resume text:
+            {text}
+            
+            Return only the JSON object, no additional text.
+            """
+
+            # Get the Gemini-compatible schema
+            schema = self._get_gemini_personal_details_schema()
+
             return self.model_client.generate_content(
-                ["Extract personal details from the resume text.", text]
+                contents=prompt,
+                generation_config=genai.GenerationConfig(
+                    response_mime_type="application/json",
+                    response_schema=schema,
+                ),
             )
 
-        response = await loop.run_in_executor(None, sync_call)
         try:
-            return json.loads(response.text)
-        except Exception:
-            return {"result": response.text}
+            response = await loop.run_in_executor(None, sync_call)
+            response_text = response.text.strip()
+
+            # Try to extract JSON from the response
+            if response_text.startswith("```json"):
+                response_text = (
+                    response_text.replace("```json", "").replace("```", "").strip()
+                )
+            elif response_text.startswith("```"):
+                response_text = response_text.replace("```", "").strip()
+
+            try:
+                parsed_data = json.loads(response_text)
+                # Ensure required fields are present
+                if "name" not in parsed_data:
+                    parsed_data["name"] = "Unknown"
+                if "email" not in parsed_data:
+                    parsed_data["email"] = ""
+
+                return PersonalDetails(**parsed_data)
+            except (json.JSONDecodeError, ValueError) as e:
+                logger.warning(f"JSON parsing failed: {str(e)}, trying fallback")
+                # Fallback to basic extraction if JSON parsing fails
+                return PersonalDetails(
+                    name="Unknown", email="", phone=None, summary=response_text
+                )
+        except Exception as e:
+            logger.error(f"Error in Gemini extract_personal_details: {str(e)}")
+            # Return a minimal PersonalDetails object if there's an error
+            return PersonalDetails(
+                name="Unknown",
+                email="",
+                phone=None,
+                summary=f"Error extracting details: {str(e)}",
+            )
 
     async def extract_sections(self, text: str) -> Dict:
         """
-        Extract resume sections using Gemini API.
+        Extract resume sections using Gemini API with proper schema.
         """
         import asyncio
         import json
 
         loop = asyncio.get_event_loop()
 
+        prompt = f"""Extract the following sections from the resume text: education, work_experience, projects, skills.
+                Return as JSON with these keys.
+                For education, provide a list of objects with university, degree, location, from_year, to_year, and gpa.
+                For work_experience, provide a list of objects with title, company, location, from_year, to_year, summary, and a list of projects (each with name, summary, and bullets).
+                For projects, provide a list of objects with name and bullets.
+                For skills, provide a list of strings.
+                Resume text:
+                {text}
+                Return only the JSON object, no additional text."""
+
         def sync_call():
+            # Get the Gemini-compatible schema
+            schema = self._get_gemini_resume_sections_schema()
+
             return self.model_client.generate_content(
-                ["Extract resume sections from the text.", text]
+                contents=prompt,
+                generation_config=genai.GenerationConfig(
+                    response_mime_type="application/json",
+                    response_schema=schema,
+                ),
             )
 
-        response = await loop.run_in_executor(None, sync_call)
         try:
-            return json.loads(response.text)
-        except Exception:
-            return {"result": response.text}
+            response = await loop.run_in_executor(None, sync_call)
+            logger.info(f"Gemini response: {type(response.text)}")
+            parsed_data = json.loads(response.text)
+            logger.info(f"Gemini response: {parsed_data}")
+            return parsed_data
+
+        except Exception as e:
+            logger.error(f"Error in Gemini extract_sections: {str(e)}")
+            # Fallback: try without schema if schema fails
+            try:
+
+                def fallback_sync_call():
+                    return self.model_client.generate_content(
+                        contents=prompt,
+                        generation_config=genai.GenerationConfig(
+                            response_mime_type="application/json",
+                        ),
+                    )
+
+                response = await loop.run_in_executor(None, fallback_sync_call)
+                response_text = response.text.strip()
+
+                # Clean up response text
+                if response_text.startswith("```json"):
+                    response_text = (
+                        response_text.replace("```json", "").replace("```", "").strip()
+                    )
+                elif response_text.startswith("```"):
+                    response_text = response_text.replace("```", "").strip()
+
+                return json.loads(response_text)
+
+            except Exception as fallback_error:
+                logger.error(f"Fallback also failed: {str(fallback_error)}")
+                # Return a basic structure if everything fails
+                return {
+                    "education": [],
+                    "work_experience": [],
+                    "projects": [],
+                    "skills": [],
+                    "error": f"Failed to parse resume: {str(fallback_error)}",
+                }
 
     async def generate_conversation_response(
         self,

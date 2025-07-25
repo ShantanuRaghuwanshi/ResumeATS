@@ -3,9 +3,9 @@ from docx import Document
 from typing import Dict, Optional
 import os
 import requests
-from services.ollama_utils import ollama_extract_personal_details, ollama_extract_sections
-from services.llm_provider import LLMProviderBase, get_llm_provider
-from configs.config import get_logger
+from app.models.resume import PersonalDetails, ResumeSections
+from app.services.llm_provider import LLMProviderBase, get_llm_provider
+from app.configs.config import get_logger
 
 logger = get_logger(__name__)
 
@@ -49,8 +49,10 @@ async def extract_sections(
     provider_config = provider_config or {}
     provider = get_extractor(provider_name, provider_config)
     flat_sections = await provider.extract_sections(text)
+    if isinstance(flat_sections, ResumeSections):
+        flat_sections = flat_sections.model_dump()
 
-    return flat_sections.model_dump()
+    return flat_sections
 
 
 def parse_pdf(file_path: str) -> Dict:

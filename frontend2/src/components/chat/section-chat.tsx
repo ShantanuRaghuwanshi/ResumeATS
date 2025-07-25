@@ -23,6 +23,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { cn } from "@/lib/utils";
 import { useWebSocket, WebSocketMessage } from "@/hooks/use-websocket";
+import { useLLMConfig } from "@/contexts/llm-context";
 
 export interface Message {
     id: string;
@@ -81,6 +82,7 @@ export default function SectionChat({
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const { toast } = useToast();
     const queryClient = useQueryClient();
+    const { llmConfig } = useLLMConfig();
 
     // Fetch conversation session
     const { data: session, isLoading } = useQuery({
@@ -171,6 +173,14 @@ export default function SectionChat({
             const response = await apiRequest("POST", `/conversation/start`, {
                 resumeId,
                 section,
+                llm_provider: llmConfig?.provider || "ollama",
+                llm_config: llmConfig ? {
+                    apiKey: llmConfig.apiKey,
+                    url: llmConfig.url,
+                    model: llmConfig.model,
+                    organizationId: llmConfig.organizationId,
+                    deploymentName: llmConfig.deploymentName,
+                } : {},
             });
             return response.json();
         },
@@ -189,6 +199,14 @@ export default function SectionChat({
 
             const response = await apiRequest("POST", `/conversation/${session.id}/message`, {
                 content: messageContent,
+                llm_provider: llmConfig?.provider || "ollama",
+                llm_config: llmConfig ? {
+                    apiKey: llmConfig.apiKey,
+                    url: llmConfig.url,
+                    model: llmConfig.model,
+                    organizationId: llmConfig.organizationId,
+                    deploymentName: llmConfig.deploymentName,
+                } : {},
             });
             return response.json();
         },

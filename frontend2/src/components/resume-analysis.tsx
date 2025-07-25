@@ -24,54 +24,87 @@ export default function ResumeAnalysis({ resumeId, onNext, onBack }: ResumeAnaly
 
   // Fetch resume data
   // Fetch resume sections
-  const { data: resume, isLoading: resumeLoading } = useQuery({
-    queryKey: ["/resume_sections/"],
+  const { data: resume, isLoading: resumeLoading, error: resumeError } = useQuery({
+    queryKey: ["resume_sections", resumeId],
     queryFn: async () => {
       const apiUrl = getApiUrl();
+      console.log("Fetching resume sections from:", `${apiUrl}/resume_sections/`);
       const res = await fetch(`${apiUrl}/resume_sections/`);
-      if (!res.ok) throw new Error("Failed to fetch resume sections");
-      return res.json();
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error("API Error:", res.status, errorText);
+        throw new Error(`Failed to fetch resume sections: ${res.status} ${errorText}`);
+      }
+      const data = await res.json();
+      console.log("Resume data received:", data);
+      return data;
     },
-    enabled: !!resumeId,
+    // Always fetch if we're on this step, even without resumeId since backend stores the last parsed resume
+    enabled: true,
+    retry: 3,
+    retryDelay: 1000,
   });
 
-  // Analyze resume mutation
+  // Analyze resume mutation - commented out since backend doesn't have this endpoint
   const analyzeResumeMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest("POST", `/resume/${resumeId}/analyze`, {});
-      return response.json();
+      // const response = await apiRequest("POST", `/resume/${resumeId}/analyze`, {});
+      // return response.json();
+      throw new Error("Analysis endpoint not implemented in backend");
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/resume", resumeId] });
+      queryClient.invalidateQueries({ queryKey: ["resume_sections", resumeId] });
       toast({
         title: "Analysis complete",
         description: "Your resume has been analyzed successfully.",
       });
     },
     onError: (error) => {
-      toast({
-        title: "Analysis failed",
-        description: error.message || "Failed to analyze resume.",
-        variant: "destructive",
-      });
+      console.log("Analysis not available:", error.message);
+      // Don't show error toast since this is expected
     },
   });
 
-  // Job match analysis mutation
+  // Job match analysis mutation - updated to use correct endpoint
   const jobMatchMutation = useMutation({
     mutationFn: async (jobDesc: string) => {
-      const response = await apiRequest("POST", `/resume/${resumeId}/job-match`, {
-        jobDescription: jobDesc,
+      const apiUrl = getApiUrl();
+      console.log("Starting job match analysis with:", { apiUrl, jobDesc: jobDesc.substring(0, 100) + "..." });
+
+      const payload = {
+        parsed: resume,
+        jd: jobDesc,
+      };
+
+      console.log("Job match payload:", payload);
+
+      const response = await fetch(`${apiUrl}/optimize_resume/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
       });
-      return response.json();
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Job match API error:", response.status, errorText);
+        throw new Error(`Failed to analyze job match: ${response.status} ${errorText}`);
+      }
+
+      const result = await response.json();
+      console.log("Job match result:", result);
+      return result;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log("Job match analysis completed successfully:", data);
       toast({
         title: "Job match analysis complete",
         description: "Your resume has been analyzed against the job description.",
       });
     },
     onError: (error) => {
+      console.error("Job match analysis failed:", error);
       toast({
         title: "Job match analysis failed",
         description: error.message || "Failed to analyze job match.",
@@ -83,11 +116,21 @@ export default function ResumeAnalysis({ resumeId, onNext, onBack }: ResumeAnaly
   // Update resume data mutation
   const updateResumeMutation = useMutation({
     mutationFn: async (updatedData: ParsedResume) => {
-      const response = await apiRequest("PUT", `/resume/${resumeId}/data`, updatedData);
+      const apiUrl = getApiUrl();
+      const response = await fetch(`${apiUrl}/resume_sections/`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updatedData),
+      });
+      if (!response.ok) {
+        throw new Error("Failed to update resume");
+      }
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/resume", resumeId] });
+      queryClient.invalidateQueries({ queryKey: ["resume_sections", resumeId] });
       setEditingSection(null);
       toast({
         title: "Resume updated",
@@ -96,12 +139,68 @@ export default function ResumeAnalysis({ resumeId, onNext, onBack }: ResumeAnaly
     },
   });
 
-  // Auto-analyze when component mounts
+  // Auto-analyze when component mounts - create a basic analysis from parsed data
   useEffect(() => {
-    if (resume && !resume.analysisResults) {
-      analyzeResumeMutation.mutate();
+    if (resume && !resume.analysis_results) {
+      // Create basic analysis from parsed data
+      const analysis = createBasicAnalysis(resume);
+      // For now, just continue without auto-analysis since there's no backend endpoint
+      // analyzeResumeMutation.mutate();
     }
   }, [resume]);
+
+  const createBasicAnalysis = (resumeData: any): AnalysisResult => {
+    const suggestions = [];
+    let score = 50; // Base score
+
+    // Check for personal details
+    if (resumeData.personal_details?.name) score += 10;
+    if (resumeData.personal_details?.email) score += 10;
+    if (resumeData.personal_details?.phone) score += 5;
+
+    // Check for experience
+    if (resumeData.work_experience?.length > 0) {
+      score += 15;
+    } else {
+      suggestions.push({
+        type: "warning" as const,
+        title: "Add Work Experience",
+        description: "Include your work history to strengthen your resume",
+        section: "experience"
+      });
+    }
+
+    // Check for education
+    if (resumeData.education?.length > 0) {
+      score += 10;
+    } else {
+      suggestions.push({
+        type: "info" as const,
+        title: "Add Education",
+        description: "Include your educational background",
+        section: "education"
+      });
+    }
+
+    // Check for skills
+    if (resumeData.skills?.length > 0) {
+      score += 10;
+    } else {
+      suggestions.push({
+        type: "warning" as const,
+        title: "Add Skills",
+        description: "List your technical and soft skills",
+        section: "skills"
+      });
+    }
+
+    return {
+      score: Math.min(score, 100),
+      suggestions,
+      keywords: resumeData.skills || [],
+      atsCompatibility: score * 0.8
+    };
+  };
 
   const handleJobMatch = () => {
     if (!jobDescription.trim()) {
@@ -116,7 +215,7 @@ export default function ResumeAnalysis({ resumeId, onNext, onBack }: ResumeAnaly
   };
 
   const renderPersonalDetails = () => {
-    const personalDetails = resume?.parsedData?.personalDetails || {};
+    const personalDetails = resume?.personal_details || {};
 
     return (
       <div className="mb-8">
@@ -148,21 +247,44 @@ export default function ResumeAnalysis({ resumeId, onNext, onBack }: ResumeAnaly
             <p className="text-slate-800">{personalDetails.phone || "Not specified"}</p>
           </div>
           <div>
-            <label className="text-sm font-medium text-slate-600">Location</label>
-            <p className="text-slate-800">{personalDetails.location || "Not specified"}</p>
+            <label className="text-sm font-medium text-slate-600">Address</label>
+            <p className="text-slate-800">{personalDetails.address || "Not specified"}</p>
           </div>
+          <div>
+            <label className="text-sm font-medium text-slate-600">LinkedIn</label>
+            <p className="text-slate-800">{personalDetails.linkedin || "Not specified"}</p>
+          </div>
+          <div>
+            <label className="text-sm font-medium text-slate-600">GitHub</label>
+            <p className="text-slate-800">{personalDetails.github || "Not specified"}</p>
+          </div>
+          <div>
+            <label className="text-sm font-medium text-slate-600">Portfolio</label>
+            <p className="text-slate-800">{personalDetails.portfolio || "Not specified"}</p>
+          </div>
+          <div>
+            <label className="text-sm font-medium text-slate-600">Website</label>
+            <p className="text-slate-800">{personalDetails.website || "Not specified"}</p>
+          </div>
+          {personalDetails.summary && (
+            <div className="md:col-span-2">
+              <label className="text-sm font-medium text-slate-600">Summary</label>
+              <p className="text-slate-800 mt-1">{personalDetails.summary}</p>
+            </div>
+          )}
+          {personalDetails.objective && (
+            <div className="md:col-span-2">
+              <label className="text-sm font-medium text-slate-600">Objective</label>
+              <p className="text-slate-800 mt-1">{personalDetails.objective}</p>
+            </div>
+          )}
         </div>
       </div>
     );
   };
 
   const renderSkills = () => {
-    const skills = resume?.parsedData?.skills || {};
-    const allSkills = [
-      ...(skills.technical || []),
-      ...(skills.soft || []),
-      ...(skills.languages || [])
-    ];
+    const skills = resume?.skills || [];
 
     return (
       <div className="mb-8">
@@ -182,12 +304,12 @@ export default function ResumeAnalysis({ resumeId, onNext, onBack }: ResumeAnaly
         </div>
         <div className="bg-slate-50 rounded-lg p-4">
           <div className="flex flex-wrap gap-2">
-            {allSkills.map((skill, index) => (
+            {skills.map((skill: string, index: number) => (
               <Badge key={index} variant="secondary" className="bg-primary/10 text-primary">
                 {skill}
               </Badge>
             ))}
-            {allSkills.length === 0 && (
+            {skills.length === 0 && (
               <p className="text-slate-500">No skills found</p>
             )}
           </div>
@@ -197,7 +319,7 @@ export default function ResumeAnalysis({ resumeId, onNext, onBack }: ResumeAnaly
   };
 
   const renderExperience = () => {
-    const experience = resume?.parsedData?.experience || [];
+    const experience = resume?.work_experience || [];
 
     return (
       <div className="mb-8">
@@ -215,24 +337,22 @@ export default function ResumeAnalysis({ resumeId, onNext, onBack }: ResumeAnaly
             {editingSection === "experience" ? "Cancel" : "Edit"}
           </Button>
         </div>
-        {experience.map((exp, index) => (
+        {experience.map((exp: any, index: number) => (
           <div key={index} className="bg-slate-50 rounded-lg p-4 mb-4">
             <div className="flex justify-between items-start mb-2">
               <div>
                 <h5 className="font-semibold text-slate-800">{exp.title || "Position not specified"}</h5>
                 <p className="text-primary font-medium">{exp.company || "Company not specified"}</p>
+                {exp.location && (
+                  <p className="text-slate-600 text-sm">{exp.location}</p>
+                )}
               </div>
               <Badge variant="outline" className="bg-white">
-                {exp.duration || "Duration not specified"}
+                {exp.from_year && exp.to_year ? `${exp.from_year} - ${exp.to_year}` : "Duration not specified"}
               </Badge>
             </div>
-            <p className="text-slate-700 text-sm mb-2">{exp.description || "No description available"}</p>
-            {exp.achievements && exp.achievements.length > 0 && (
-              <ul className="text-slate-700 text-sm space-y-1">
-                {exp.achievements.map((achievement, i) => (
-                  <li key={i}>• {achievement}</li>
-                ))}
-              </ul>
+            {exp.summary && (
+              <p className="text-slate-700 text-sm mb-2">{exp.summary}</p>
             )}
           </div>
         ))}
@@ -246,7 +366,7 @@ export default function ResumeAnalysis({ resumeId, onNext, onBack }: ResumeAnaly
   };
 
   const renderEducation = () => {
-    const education = resume?.parsedData?.education || [];
+    const education = resume?.education || [];
 
     return (
       <div className="mb-8">
@@ -264,15 +384,21 @@ export default function ResumeAnalysis({ resumeId, onNext, onBack }: ResumeAnaly
             {editingSection === "education" ? "Cancel" : "Edit"}
           </Button>
         </div>
-        {education.map((edu, index) => (
+        {education.map((edu: any, index: number) => (
           <div key={index} className="bg-slate-50 rounded-lg p-4 mb-4">
             <div className="flex justify-between items-start">
               <div>
                 <h5 className="font-semibold text-slate-800">{edu.degree || "Degree not specified"}</h5>
-                <p className="text-primary font-medium">{edu.institution || "Institution not specified"}</p>
+                <p className="text-primary font-medium">{edu.university || "University not specified"}</p>
+                {edu.location && (
+                  <p className="text-slate-600 text-sm">{edu.location}</p>
+                )}
+                {edu.gpa && (
+                  <p className="text-slate-600 text-sm">GPA: {edu.gpa}</p>
+                )}
               </div>
               <Badge variant="outline" className="bg-white">
-                {edu.year || "Year not specified"}
+                {edu.from_year && edu.to_year ? `${edu.from_year} - ${edu.to_year}` : "Year not specified"}
               </Badge>
             </div>
           </div>
@@ -286,7 +412,49 @@ export default function ResumeAnalysis({ resumeId, onNext, onBack }: ResumeAnaly
     );
   };
 
-  if (resumeLoading || !resume) {
+  const renderProjects = () => {
+    const projects = resume?.projects || [];
+
+    return (
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-4">
+          <h4 className="font-semibold text-slate-800 flex items-center">
+            <Code className="text-primary mr-2 w-5 h-5" />
+            Projects
+          </h4>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setEditingSection(editingSection === "projects" ? null : "projects")}
+          >
+            <Edit className="w-4 h-4 mr-1" />
+            {editingSection === "projects" ? "Cancel" : "Edit"}
+          </Button>
+        </div>
+        {projects.map((project: any, index: number) => (
+          <div key={index} className="bg-slate-50 rounded-lg p-4 mb-4">
+            <div className="mb-2">
+              <h5 className="font-semibold text-slate-800">{project.name || "Project name not specified"}</h5>
+            </div>
+            {project.bullets && project.bullets.length > 0 && (
+              <ul className="text-slate-700 text-sm space-y-1">
+                {project.bullets.map((bullet: string, i: number) => (
+                  <li key={i}>• {bullet}</li>
+                ))}
+              </ul>
+            )}
+          </div>
+        ))}
+        {projects.length === 0 && (
+          <div className="bg-slate-50 rounded-lg p-4">
+            <p className="text-slate-500">No projects found</p>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  if (resumeLoading) {
     return (
       <Card className="bg-white rounded-xl shadow-sm border border-slate-200">
         <CardContent className="p-8">
@@ -295,12 +463,61 @@ export default function ResumeAnalysis({ resumeId, onNext, onBack }: ResumeAnaly
             <div className="h-32 bg-slate-200 rounded"></div>
             <div className="h-32 bg-slate-200 rounded"></div>
           </div>
+          <p className="text-center text-slate-600 mt-4">Loading resume data...</p>
         </CardContent>
       </Card>
     );
   }
 
-  const analysisResults = resume.analysisResults as AnalysisResult | null;
+  if (resumeError) {
+    return (
+      <Card className="bg-white rounded-xl shadow-sm border border-slate-200">
+        <CardContent className="p-8">
+          <div className="text-center">
+            <h3 className="text-lg font-semibold text-red-600 mb-2">Error Loading Resume</h3>
+            <p className="text-slate-600 mb-4">
+              {resumeError instanceof Error ? resumeError.message : "Failed to load resume data"}
+            </p>
+            <Button
+              onClick={() => window.location.reload()}
+              variant="outline"
+            >
+              Retry
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!resume) {
+    return (
+      <Card className="bg-white rounded-xl shadow-sm border border-slate-200">
+        <CardContent className="p-8">
+          <div className="text-center">
+            <h3 className="text-lg font-semibold text-slate-800 mb-2">No Resume Data</h3>
+            <p className="text-slate-600 mb-4">
+              No resume has been uploaded yet. Please upload a resume first.
+            </p>
+            <Button onClick={onBack} variant="outline">
+              Go Back to Upload
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const analysisResults = resume?.analysis_results || (resume ? createBasicAnalysis(resume) : null);
+
+  // Debug logging
+  console.log("Resume Analysis Debug:", {
+    resumeId,
+    resume,
+    analysisResults,
+    resumeLoading,
+    resumeError
+  });
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -320,6 +537,7 @@ export default function ResumeAnalysis({ resumeId, onNext, onBack }: ResumeAnaly
             {renderSkills()}
             {renderExperience()}
             {renderEducation()}
+            {renderProjects()}
           </CardContent>
         </Card>
       </div>
@@ -370,7 +588,7 @@ export default function ResumeAnalysis({ resumeId, onNext, onBack }: ResumeAnaly
             <CardContent className="p-6">
               <h3 className="text-lg font-bold text-slate-800 mb-4">Quick Suggestions</h3>
               <div className="space-y-3">
-                {analysisResults.suggestions.slice(0, 5).map((suggestion, index) => (
+                {analysisResults.suggestions.slice(0, 5).map((suggestion: any, index: number) => (
                   <div
                     key={index}
                     className={`flex items-start space-x-3 p-3 rounded-lg border ${suggestion.type === "warning" ? "bg-yellow-50 border-yellow-200" :

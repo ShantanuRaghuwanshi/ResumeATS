@@ -804,3 +804,28 @@ class VersionManager:
         except Exception as e:
             logger.error(f"Failed to anonymize resume data: {e}")
             return resume_data
+
+    async def health_check(self) -> bool:
+        """Perform health check for version manager"""
+        try:
+            # Check if database is accessible
+            if self.db is None:
+                return False
+                
+            # Check configuration values
+            if not hasattr(self, 'max_versions_per_user') or self.max_versions_per_user <= 0:
+                return False
+                
+            if not hasattr(self, 'backup_retention_days') or self.backup_retention_days <= 0:
+                return False
+                
+            # Test basic functionality
+            test_data = {"test": "data"}
+            similarity = await self._calculate_similarity(test_data, test_data)
+            if similarity != 1.0:
+                return False
+                
+            return True
+        except Exception as e:
+            logger.error(f"VersionManager health check failed: {e}")
+            return False
