@@ -10,7 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
-import { getApiUrl } from "@/lib/utils";
+import { getApiUrl, fetchWithSession } from "@/lib/utils";
 import {
     Package,
     Plus,
@@ -118,8 +118,7 @@ export function BatchExportPanel({
     const { data: versions, isLoading: versionsLoading } = useQuery({
         queryKey: ["resume-versions", "current_user"], // Replace with actual user ID
         queryFn: async () => {
-            const apiUrl = getApiUrl();
-            const response = await fetch(`${apiUrl}/api/v1/versions/list/current_user`);
+            const response = await fetchWithSession("/api/v1/versions/list/current_user");
             if (!response.ok) throw new Error("Failed to fetch versions");
             const data = await response.json();
             return data.versions as ResumeVersion[];
@@ -129,8 +128,7 @@ export function BatchExportPanel({
     // Create batch export mutation
     const createBatchExportMutation = useMutation({
         mutationFn: async (batchConfig: any) => {
-            const apiUrl = getApiUrl();
-            const response = await fetch(`${apiUrl}/api/v1/export/batch`, {
+            const response = await fetchWithSession("/api/v1/export/batch", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -200,7 +198,7 @@ export function BatchExportPanel({
 
         const poll = async () => {
             try {
-                const response = await fetch(`${apiUrl}/api/v1/export/batch/${batchId}`);
+                const response = await fetchWithSession(`/api/v1/export/batch/${batchId}`);
                 if (!response.ok) return;
 
                 const batchRequest: BatchExportRequest = await response.json();
@@ -278,8 +276,7 @@ export function BatchExportPanel({
     // Handle batch download
     const handleBatchDownload = async (batch: BatchExportRequest) => {
         try {
-            const apiUrl = getApiUrl();
-            const response = await fetch(`${apiUrl}/api/v1/export/download/batch/${batch.id}`);
+            const response = await fetchWithSession(`/api/v1/export/download/batch/${batch.id}`);
 
             if (!response.ok) {
                 throw new Error("Download failed");

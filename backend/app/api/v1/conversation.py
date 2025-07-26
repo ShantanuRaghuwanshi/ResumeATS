@@ -63,10 +63,8 @@ async def start_conversation(
     resume_id: str = Body(...),
     user_id: str = Body(...),
     section: str = Body(...),
-    llm_provider: str = Body("openai"),
-    llm_config: Dict[str, Any] = Body({}),
 ):
-    """Start a new conversation session for a resume section"""
+    """Start a new conversation session for a resume section using session-based LLM config"""
     from security.middleware import llm_rate_limit
     from security.input_validation import (
         InputSanitizer,
@@ -80,16 +78,26 @@ async def start_conversation(
         AuditSeverity,
     )
     from security.rate_limiting import rate_limiter
+    from app.utils.session_utils import (
+        get_llm_provider_from_session,
+        get_session_id_from_request,
+        get_session_llm_config,
+    )
 
     # Apply rate limiting
     await llm_rate_limit(request)
 
     try:
+        # Get session information
+        session_id = get_session_id_from_request(request)
+
+        # Get LLM provider from session
+        llm_provider_instance = get_llm_provider_from_session(request)
+
         # Validate and sanitize inputs with comprehensive validation
         resume_id = comprehensive_input_validation(resume_id, max_length=100)
         user_id = comprehensive_input_validation(user_id, max_length=100)
         section = comprehensive_input_validation(section, max_length=50)
-        llm_provider = comprehensive_input_validation(llm_provider, max_length=50)
 
         if not all([resume_id, user_id, section]):
             raise HTTPException(status_code=400, detail="Missing required fields")
@@ -125,16 +133,30 @@ async def start_conversation(
             details={
                 "resume_id": resume_id,
                 "section": section,
-                "llm_provider": llm_provider,
+                "session_id": session_id,
+                "llm_provider": llm_provider_instance.__class__.__name__,
             },
         )
+
+        # Get LLM config from session for conversation manager
+        llm_config = get_session_llm_config(request)
+        llm_config_dict = {
+            "api_key": llm_config.api_key,
+            "base_url": llm_config.base_url,
+            "model": llm_config.model_name,
+            "temperature": llm_config.temperature,
+            "max_tokens": llm_config.max_tokens,
+            **llm_config.additional_params,
+        }
+        # Remove None values
+        llm_config_dict = {k: v for k, v in llm_config_dict.items() if v is not None}
 
         session = await conversation_manager.start_section_conversation(
             resume_id=resume_id,
             user_id=user_id,
             section=section,
-            llm_provider=llm_provider,
-            llm_config=llm_config,
+            llm_provider=llm_config.provider.value,
+            llm_config=llm_config_dict,
         )
 
         return JSONResponse(
@@ -188,6 +210,7 @@ async def send_message(
         comprehensive_input_validation,
     )
     from security.audit_logging import log_user_action
+    from security.rate_limiting import rate_limiter
 
     # Apply rate limiting
     await llm_rate_limit(request)

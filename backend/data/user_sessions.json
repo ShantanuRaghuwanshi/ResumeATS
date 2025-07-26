@@ -1,0 +1,332 @@
+{
+  "a628397a-5263-4919-a1e0-de0d455059c7": {
+    "session_id": "a628397a-5263-4919-a1e0-de0d455059c7",
+    "llm_config": {
+      "provider": "ollama",
+      "model_name": "llama3:8b",
+      "api_key": null,
+      "base_url": "http://localhost:11434",
+      "temperature": 0.7,
+      "max_tokens": 1000,
+      "top_p": null,
+      "frequency_penalty": null,
+      "presence_penalty": null,
+      "additional_params": {}
+    },
+    "device_id": "demo-device-123",
+    "user_agent": "demo-client/1.0",
+    "ip_address": "127.0.0.1",
+    "status": "active",
+    "created_at": "2025-07-25T14:54:12.686605+00:00",
+    "last_accessed": "2025-07-25T14:54:12.690441+00:00",
+    "expires_at": "2025-07-26T14:54:12.686593+00:00",
+    "metadata": {
+      "demo": true,
+      "user_agent": "demo-client"
+    }
+  },
+  "c95f2dc9-4aae-4517-b3de-ae6c72071e86": {
+    "session_id": "c95f2dc9-4aae-4517-b3de-ae6c72071e86",
+    "llm_config": {
+      "provider": "openai",
+      "model_name": "gpt-3.5-turbo",
+      "api_key": "test-key",
+      "base_url": null,
+      "temperature": 0.7,
+      "max_tokens": 1000,
+      "top_p": null,
+      "frequency_penalty": null,
+      "presence_penalty": null,
+      "additional_params": {}
+    },
+    "device_id": "test-device-123",
+    "user_agent": "Python/3.13 aiohttp/3.12.14",
+    "ip_address": "127.0.0.1",
+    "status": "active",
+    "created_at": "2025-07-25T15:06:07.624422+00:00",
+    "last_accessed": "2025-07-25T15:06:07.624423+00:00",
+    "expires_at": "2025-07-26T15:06:07.624412+00:00",
+    "metadata": {
+      "test": true
+    }
+  },
+  "d6f4c9a9-6ff6-4a03-bead-f0e18dbc9b80": {
+    "session_id": "d6f4c9a9-6ff6-4a03-bead-f0e18dbc9b80",
+    "llm_config": {
+      "provider": "gemini",
+      "model_name": "gemini-2.5-flash",
+      "api_key": "AIzaSyCP3-LNqJFeIz1SyzGv-HruWItCgx55hKU",
+      "base_url": null,
+      "temperature": 0.7,
+      "max_tokens": 1000,
+      "top_p": null,
+      "frequency_penalty": null,
+      "presence_penalty": null,
+      "additional_params": {}
+    },
+    "device_id": "device_jthx485sl",
+    "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+    "ip_address": "127.0.0.1",
+    "status": "active",
+    "created_at": "2025-07-25T15:07:24.478117+00:00",
+    "last_accessed": "2025-07-25T15:07:50.824173+00:00",
+    "expires_at": "2025-07-26T15:07:24.478104+00:00",
+    "metadata": {
+      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+      "platform": "web"
+    }
+  },
+  "3ef701b6-9667-41f8-b31f-4199e3e18dd1": {
+    "session_id": "3ef701b6-9667-41f8-b31f-4199e3e18dd1",
+    "llm_config": {
+      "provider": "ollama",
+      "model_name": "llama3:8b",
+      "api_key": null,
+      "base_url": "http://localhost:11434",
+      "temperature": 0.7,
+      "max_tokens": 1000,
+      "top_p": null,
+      "frequency_penalty": null,
+      "presence_penalty": null,
+      "additional_params": {}
+    },
+    "device_id": "test-device-advanced",
+    "user_agent": "Python/3.13 aiohttp/3.12.14",
+    "ip_address": "127.0.0.1",
+    "status": "active",
+    "created_at": "2025-07-25T15:07:56.656679+00:00",
+    "last_accessed": "2025-07-25T15:07:56.656679+00:00",
+    "expires_at": "2025-07-26T15:07:56.656669+00:00",
+    "metadata": {
+      "test_type": "advanced_workflow"
+    }
+  },
+  "bcbbabff-b7d5-4e75-9b47-5be1265d683a": {
+    "session_id": "bcbbabff-b7d5-4e75-9b47-5be1265d683a",
+    "llm_config": {
+      "provider": "gemini",
+      "model_name": "gemini-2.5-flash",
+      "api_key": "AIzaSyCP3-LNqJFeIz1SyzGv-HruWItCgx55hKU",
+      "base_url": null,
+      "temperature": 0.7,
+      "max_tokens": 1000,
+      "top_p": null,
+      "frequency_penalty": null,
+      "presence_penalty": null,
+      "additional_params": {}
+    },
+    "device_id": "device_roxhtvj9s",
+    "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+    "ip_address": "127.0.0.1",
+    "status": "active",
+    "created_at": "2025-07-25T15:09:19.687025+00:00",
+    "last_accessed": "2025-07-25T15:09:19.712327+00:00",
+    "expires_at": "2025-07-26T15:09:19.686990+00:00",
+    "metadata": {
+      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+      "platform": "web"
+    }
+  },
+  "c46067d4-c344-4ed8-a5bc-6f2758ce74f3": {
+    "session_id": "c46067d4-c344-4ed8-a5bc-6f2758ce74f3",
+    "llm_config": {
+      "provider": "gemini",
+      "model_name": "gemini-2.5-flash",
+      "api_key": "AIzaSyCP3-LNqJFeIz1SyzGv-HruWItCgx55hKU",
+      "base_url": null,
+      "temperature": 0.7,
+      "max_tokens": 1000,
+      "top_p": null,
+      "frequency_penalty": null,
+      "presence_penalty": null,
+      "additional_params": {}
+    },
+    "device_id": "device_wlrwsiu9t",
+    "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+    "ip_address": "127.0.0.1",
+    "status": "active",
+    "created_at": "2025-07-25T15:09:57.442935+00:00",
+    "last_accessed": "2025-07-25T15:09:57.470171+00:00",
+    "expires_at": "2025-07-26T15:09:57.442898+00:00",
+    "metadata": {
+      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+      "platform": "web"
+    }
+  },
+  "f1eae506-56ef-4730-b8e9-7674f70442fe": {
+    "session_id": "f1eae506-56ef-4730-b8e9-7674f70442fe",
+    "llm_config": {
+      "provider": "ollama",
+      "model_name": "llama3:8b",
+      "api_key": null,
+      "base_url": "http://localhost:11434",
+      "temperature": 0.7,
+      "max_tokens": 1000,
+      "top_p": null,
+      "frequency_penalty": null,
+      "presence_penalty": null,
+      "additional_params": {}
+    },
+    "device_id": "debug-device",
+    "user_agent": "Python/3.13 aiohttp/3.12.14",
+    "ip_address": "127.0.0.1",
+    "status": "active",
+    "created_at": "2025-07-25T15:10:41.046530+00:00",
+    "last_accessed": "2025-07-25T15:10:41.048577+00:00",
+    "expires_at": "2025-07-26T15:10:41.046515+00:00",
+    "metadata": {}
+  },
+  "555da802-dbb3-4d02-8aa3-0e7243376602": {
+    "session_id": "555da802-dbb3-4d02-8aa3-0e7243376602",
+    "llm_config": {
+      "provider": "ollama",
+      "model_name": "llama3:8b",
+      "api_key": null,
+      "base_url": "http://localhost:11434",
+      "temperature": 0.7,
+      "max_tokens": 1000,
+      "top_p": null,
+      "frequency_penalty": null,
+      "presence_penalty": null,
+      "additional_params": {}
+    },
+    "device_id": "debug-device",
+    "user_agent": "Python/3.13 aiohttp/3.12.14",
+    "ip_address": "127.0.0.1",
+    "status": "active",
+    "created_at": "2025-07-25T15:11:12.162760+00:00",
+    "last_accessed": "2025-07-25T15:11:12.169720+00:00",
+    "expires_at": "2025-07-26T15:11:12.162749+00:00",
+    "metadata": {}
+  },
+  "b63419f1-1475-4460-8972-bcf429156b9e": {
+    "session_id": "b63419f1-1475-4460-8972-bcf429156b9e",
+    "llm_config": {
+      "provider": "gemini",
+      "model_name": "gemini-2.5-flash",
+      "api_key": "AIzaSyCP3-LNqJFeIz1SyzGv-HruWItCgx55hKU",
+      "base_url": null,
+      "temperature": 0.7,
+      "max_tokens": 1000,
+      "top_p": null,
+      "frequency_penalty": null,
+      "presence_penalty": null,
+      "additional_params": {}
+    },
+    "device_id": "device_e2dfdgh1o",
+    "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+    "ip_address": "127.0.0.1",
+    "status": "active",
+    "created_at": "2025-07-25T16:48:59.761020+00:00",
+    "last_accessed": "2025-07-25T17:22:44.076200+00:00",
+    "expires_at": "2025-07-26T16:48:59.761004+00:00",
+    "metadata": {
+      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+      "platform": "web"
+    }
+  },
+  "8d77cea9-5bac-446a-91c2-aad76cfbb069": {
+    "session_id": "8d77cea9-5bac-446a-91c2-aad76cfbb069",
+    "llm_config": {
+      "provider": "gemini",
+      "model_name": "gemini-2.5-flash",
+      "api_key": "http://localhost:11434",
+      "base_url": null,
+      "temperature": 0.7,
+      "max_tokens": 1000,
+      "top_p": null,
+      "frequency_penalty": null,
+      "presence_penalty": null,
+      "additional_params": {}
+    },
+    "device_id": "device_xoc4lbtzx",
+    "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+    "ip_address": "127.0.0.1",
+    "status": "active",
+    "created_at": "2025-07-25T17:23:11.637351+00:00",
+    "last_accessed": "2025-07-25T17:23:11.655479+00:00",
+    "expires_at": "2025-07-26T17:23:11.637337+00:00",
+    "metadata": {
+      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+      "platform": "web"
+    }
+  },
+  "92c53346-10ee-4396-b306-cb5df42015d6": {
+    "session_id": "92c53346-10ee-4396-b306-cb5df42015d6",
+    "llm_config": {
+      "provider": "gemini",
+      "model_name": "gemini-2.5-flash",
+      "api_key": "AIzaSyCP3-LNqJFeIz1SyzGv-HruWItCgx55hKU",
+      "base_url": null,
+      "temperature": 0.7,
+      "max_tokens": 1000,
+      "top_p": null,
+      "frequency_penalty": null,
+      "presence_penalty": null,
+      "additional_params": {}
+    },
+    "device_id": "device_xipiay3sf",
+    "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+    "ip_address": "127.0.0.1",
+    "status": "active",
+    "created_at": "2025-07-25T17:24:34.045173+00:00",
+    "last_accessed": "2025-07-25T17:33:52.111575+00:00",
+    "expires_at": "2025-07-26T17:24:34.045138+00:00",
+    "metadata": {
+      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+      "platform": "web"
+    }
+  },
+  "00048095-26d1-4174-b184-93f65031ebe4": {
+    "session_id": "00048095-26d1-4174-b184-93f65031ebe4",
+    "llm_config": {
+      "provider": "gemini",
+      "model_name": "gemini-2.5-flash",
+      "api_key": "AIzaSyCP3-LNqJFeIz1SyzGv-HruWItCgx55hKU",
+      "base_url": null,
+      "temperature": 0.7,
+      "max_tokens": 1000,
+      "top_p": null,
+      "frequency_penalty": null,
+      "presence_penalty": null,
+      "additional_params": {}
+    },
+    "device_id": "device_l5wrotmpi",
+    "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+    "ip_address": "127.0.0.1",
+    "status": "active",
+    "created_at": "2025-07-25T17:34:22.299647+00:00",
+    "last_accessed": "2025-07-25T17:39:28.473575+00:00",
+    "expires_at": "2025-07-26T17:34:22.299632+00:00",
+    "metadata": {
+      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+      "platform": "web"
+    }
+  },
+  "e3249322-1b65-4c0f-a4ad-6ed2c9131a26": {
+    "session_id": "e3249322-1b65-4c0f-a4ad-6ed2c9131a26",
+    "llm_config": {
+      "provider": "gemini",
+      "model_name": "gemini-2.5-flash",
+      "api_key": "AIzaSyCP3-LNqJFeIz1SyzGv-HruWItCgx55hKU",
+      "base_url": null,
+      "temperature": 0.7,
+      "max_tokens": 1000,
+      "top_p": null,
+      "frequency_penalty": null,
+      "presence_penalty": null,
+      "additional_params": {}
+    },
+    "device_id": "device_l5wrotmpi",
+    "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+    "ip_address": "127.0.0.1",
+    "status": "active",
+    "created_at": "2025-07-25T17:40:39.357505+00:00",
+    "last_accessed": "2025-07-25T17:45:05.335638+00:00",
+    "expires_at": "2025-07-26T17:40:39.357477+00:00",
+    "metadata": {
+      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+      "platform": "web"
+    }
+  }
+}

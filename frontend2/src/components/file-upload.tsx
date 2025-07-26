@@ -7,9 +7,10 @@ import { ArrowLeft, ArrowRight, Upload, FileText, AlertTriangle, Cloud, File, X 
 import { useToast } from "@/hooks/use-toast";
 import { cn, getApiUrl } from "@/lib/utils";
 import { useLLMConfig } from "@/contexts/llm-context";
+import { apiUpload } from "@/lib/queryClient";
 
 interface FileUploadProps {
-  onResumeUploaded: (resumeId: number) => void;
+  onResumeUploaded: (resumeData: any) => void;
   onNext: () => void;
 }
 
@@ -23,7 +24,7 @@ export default function FileUpload({ onResumeUploaded, onNext }: FileUploadProps
   const [uploadedFile, setUploadedFile] = useState<UploadedFile | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const { toast } = useToast();
-  const { llmConfig } = useLLMConfig();
+  const { isSessionValid, clearSession } = useLLMConfig();
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
@@ -69,33 +70,17 @@ export default function FileUpload({ onResumeUploaded, onNext }: FileUploadProps
     // Upload file immediately
     setIsUploading(true);
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      
-      // Use configured LLM provider or fallback to ollama
-      const providerName = llmConfig?.provider || "ollama";
-      const providerConfig = llmConfig ? {
-        apiKey: llmConfig.apiKey,
-        url: llmConfig.url,
-        model: llmConfig.model,
-        organizationId: llmConfig.organizationId,
-        deploymentName: llmConfig.deploymentName,
-      } : {};
-      
-      formData.append("provider_name", providerName);
-      formData.append("provider_config", JSON.stringify(providerConfig));
-
-      const apiUrl = getApiUrl();
-      const response = await fetch(`${apiUrl}/upload_resume/`, {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Upload failed");
+      // Check if session is valid
+      if (!isSessionValid) {
+        clearSession();
+        throw new Error("Session expired. Please configure LLM again.");
       }
 
+      const formData = new FormData();
+      formData.append("file", file);
+
+      // Use session-based upload (no need to pass LLM config)
+      const response = await apiUpload("/upload_resume/", formData);
       const result = await response.json();
 
       toast({
@@ -103,18 +88,28 @@ export default function FileUpload({ onResumeUploaded, onNext }: FileUploadProps
         description: "Your resume has been uploaded and parsed.",
       });
 
-      onResumeUploaded(result.resumeId);
+      onResumeUploaded(result);
     } catch (error) {
-      toast({
-        title: "Upload failed",
-        description: (error instanceof Error && error.message) ? error.message : "Failed to upload resume. Please try again.",
-        variant: "destructive",
-      });
+      if (error instanceof Error && error.message.includes("401")) {
+        // Session expired or invalid
+        clearSession();
+        toast({
+          title: "Session expired",
+          description: "Please configure your LLM settings again.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Upload failed",
+          description: (error instanceof Error && error.message) ? error.message : "Failed to upload resume. Please try again.",
+          variant: "destructive",
+        });
+      }
       setUploadedFile(null);
     } finally {
       setIsUploading(false);
     }
-  }, [toast, onResumeUploaded]);
+  }, [toast, onResumeUploaded, isSessionValid, clearSession]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,

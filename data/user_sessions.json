@@ -1,1 +1,444 @@
-{}
+{
+  "87d143fb-9839-460d-8dd9-01efab46e2f9": {
+    "session_id": "87d143fb-9839-460d-8dd9-01efab46e2f9",
+    "llm_config": {
+      "provider": "ollama",
+      "model_name": "llama3:8b",
+      "api_key": null,
+      "base_url": "http://localhost:11434",
+      "temperature": 0.7,
+      "max_tokens": 1000,
+      "top_p": null,
+      "frequency_penalty": null,
+      "presence_penalty": null,
+      "additional_params": {}
+    },
+    "device_id": "debug-device",
+    "user_agent": "Python/3.13 aiohttp/3.12.14",
+    "ip_address": "127.0.0.1",
+    "status": "active",
+    "created_at": "2025-07-25T15:13:37.544218+00:00",
+    "last_accessed": "2025-07-25T15:13:37.546404+00:00",
+    "expires_at": "2025-07-26T15:13:37.544206+00:00",
+    "metadata": {}
+  },
+  "dad81c21-a085-4276-a37a-7eeeae2b5f8b": {
+    "session_id": "dad81c21-a085-4276-a37a-7eeeae2b5f8b",
+    "llm_config": {
+      "provider": "ollama",
+      "model_name": "llama3:8b",
+      "api_key": null,
+      "base_url": "http://localhost:11434",
+      "temperature": 0.7,
+      "max_tokens": 1000,
+      "top_p": null,
+      "frequency_penalty": null,
+      "presence_penalty": null,
+      "additional_params": {}
+    },
+    "device_id": "debug-device",
+    "user_agent": "Python/3.13 aiohttp/3.12.14",
+    "ip_address": "127.0.0.1",
+    "status": "active",
+    "created_at": "2025-07-25T15:14:33.599020+00:00",
+    "last_accessed": "2025-07-25T15:14:33.600896+00:00",
+    "expires_at": "2025-07-26T15:14:33.599010+00:00",
+    "metadata": {}
+  },
+  "f8a1e65f-eb98-4216-870b-ce0261b72761": {
+    "session_id": "f8a1e65f-eb98-4216-870b-ce0261b72761",
+    "llm_config": {
+      "provider": "ollama",
+      "model_name": "llama3:8b",
+      "api_key": null,
+      "base_url": "http://localhost:11434",
+      "temperature": 0.7,
+      "max_tokens": 1000,
+      "top_p": null,
+      "frequency_penalty": null,
+      "presence_penalty": null,
+      "additional_params": {}
+    },
+    "device_id": "debug-device",
+    "user_agent": "Python/3.13 aiohttp/3.12.14",
+    "ip_address": "127.0.0.1",
+    "status": "active",
+    "created_at": "2025-07-25T15:14:48.171471+00:00",
+    "last_accessed": "2025-07-25T15:14:48.173415+00:00",
+    "expires_at": "2025-07-26T15:14:48.171462+00:00",
+    "metadata": {}
+  },
+  "47f0fa97-0277-4216-9071-7329dc0b7e14": {
+    "session_id": "47f0fa97-0277-4216-9071-7329dc0b7e14",
+    "llm_config": {
+      "provider": "ollama",
+      "model_name": "llama3:8b",
+      "api_key": null,
+      "base_url": "http://localhost:11434",
+      "temperature": 0.7,
+      "max_tokens": 1000,
+      "top_p": null,
+      "frequency_penalty": null,
+      "presence_penalty": null,
+      "additional_params": {}
+    },
+    "device_id": "debug-device",
+    "user_agent": "Python/3.13 aiohttp/3.12.14",
+    "ip_address": "127.0.0.1",
+    "status": "active",
+    "created_at": "2025-07-25T15:15:50.472376+00:00",
+    "last_accessed": "2025-07-25T15:15:50.474615+00:00",
+    "expires_at": "2025-07-26T15:15:50.472365+00:00",
+    "metadata": {}
+  },
+  "418f510b-1161-46b8-9e76-25c206df7e24": {
+    "session_id": "418f510b-1161-46b8-9e76-25c206df7e24",
+    "llm_config": {
+      "provider": "ollama",
+      "model_name": "llama3:8b",
+      "api_key": null,
+      "base_url": "http://localhost:11434",
+      "temperature": 0.7,
+      "max_tokens": 1000,
+      "top_p": null,
+      "frequency_penalty": null,
+      "presence_penalty": null,
+      "additional_params": {}
+    },
+    "device_id": "debug-device",
+    "user_agent": "Python/3.13 aiohttp/3.12.14",
+    "ip_address": "127.0.0.1",
+    "status": "active",
+    "created_at": "2025-07-25T15:16:59.830907+00:00",
+    "last_accessed": "2025-07-25T15:16:59.833087+00:00",
+    "expires_at": "2025-07-26T15:16:59.830892+00:00",
+    "metadata": {}
+  },
+  "fa69547e-275e-493d-8e1f-4b354848e9e6": {
+    "session_id": "fa69547e-275e-493d-8e1f-4b354848e9e6",
+    "llm_config": {
+      "provider": "gemini",
+      "model_name": "gemini-2.5-flash",
+      "api_key": "AIzaSyCP3-LNqJFeIz1SyzGv-HruWItCgx55hKU",
+      "base_url": null,
+      "temperature": 0.7,
+      "max_tokens": 1000,
+      "top_p": null,
+      "frequency_penalty": null,
+      "presence_penalty": null,
+      "additional_params": {}
+    },
+    "device_id": "device_wlrwsiu9t",
+    "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+    "ip_address": "127.0.0.1",
+    "status": "active",
+    "created_at": "2025-07-25T15:17:23.223903+00:00",
+    "last_accessed": "2025-07-25T15:20:53.901629+00:00",
+    "expires_at": "2025-07-26T15:17:23.223894+00:00",
+    "metadata": {
+      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+      "platform": "web"
+    }
+  },
+  "08da3bf0-a602-4504-82de-b8f614b5cf35": {
+    "session_id": "08da3bf0-a602-4504-82de-b8f614b5cf35",
+    "llm_config": {
+      "provider": "ollama",
+      "model_name": "llama3:8b",
+      "api_key": null,
+      "base_url": "http://localhost:11434",
+      "temperature": 0.7,
+      "max_tokens": 1000,
+      "top_p": null,
+      "frequency_penalty": null,
+      "presence_penalty": null,
+      "additional_params": {}
+    },
+    "device_id": "test-device-advanced",
+    "user_agent": "Python/3.13 aiohttp/3.12.14",
+    "ip_address": "127.0.0.1",
+    "status": "active",
+    "created_at": "2025-07-25T15:17:58.796545+00:00",
+    "last_accessed": "2025-07-25T15:17:58.796546+00:00",
+    "expires_at": "2025-07-26T15:17:58.796534+00:00",
+    "metadata": {
+      "test_type": "advanced_workflow"
+    }
+  },
+  "0eed1465-7e59-45fc-bf7c-b3ce3781e943": {
+    "session_id": "0eed1465-7e59-45fc-bf7c-b3ce3781e943",
+    "llm_config": {
+      "provider": "ollama",
+      "model_name": "llama3:8b",
+      "api_key": null,
+      "base_url": "http://localhost:11434",
+      "temperature": 0.7,
+      "max_tokens": 1000,
+      "top_p": null,
+      "frequency_penalty": null,
+      "presence_penalty": null,
+      "additional_params": {}
+    },
+    "device_id": "test-device-advanced",
+    "user_agent": "Python/3.13 aiohttp/3.12.14",
+    "ip_address": "127.0.0.1",
+    "status": "active",
+    "created_at": "2025-07-25T15:18:38.600953+00:00",
+    "last_accessed": "2025-07-25T15:18:38.600954+00:00",
+    "expires_at": "2025-07-26T15:18:38.600943+00:00",
+    "metadata": {
+      "test_type": "advanced_workflow"
+    }
+  },
+  "49f8c454-79f7-48d6-9cc0-2f24fec22bb2": {
+    "session_id": "49f8c454-79f7-48d6-9cc0-2f24fec22bb2",
+    "llm_config": {
+      "provider": "ollama",
+      "model_name": "llama3:8b",
+      "api_key": null,
+      "base_url": "http://localhost:11434",
+      "temperature": 0.7,
+      "max_tokens": 1000,
+      "top_p": null,
+      "frequency_penalty": null,
+      "presence_penalty": null,
+      "additional_params": {}
+    },
+    "device_id": "final-test-device",
+    "user_agent": "Python/3.13 aiohttp/3.12.14",
+    "ip_address": "127.0.0.1",
+    "status": "active",
+    "created_at": "2025-07-25T15:19:17.130315+00:00",
+    "last_accessed": "2025-07-25T15:19:17.132426+00:00",
+    "expires_at": "2025-07-26T15:19:17.130301+00:00",
+    "metadata": {}
+  },
+  "c366db24-c6ea-4b8a-af22-703d95b2a748": {
+    "session_id": "c366db24-c6ea-4b8a-af22-703d95b2a748",
+    "llm_config": {
+      "provider": "ollama",
+      "model_name": "llama3:8b",
+      "api_key": null,
+      "base_url": "http://localhost:11434",
+      "temperature": 0.7,
+      "max_tokens": 1000,
+      "top_p": null,
+      "frequency_penalty": null,
+      "presence_penalty": null,
+      "additional_params": {}
+    },
+    "device_id": "final-test-device",
+    "user_agent": "Python/3.13 aiohttp/3.12.14",
+    "ip_address": "127.0.0.1",
+    "status": "active",
+    "created_at": "2025-07-25T15:20:04.024237+00:00",
+    "last_accessed": "2025-07-25T15:20:04.026242+00:00",
+    "expires_at": "2025-07-26T15:20:04.024227+00:00",
+    "metadata": {}
+  },
+  "20071473-b3b1-4022-a149-b47ab435cc5f": {
+    "session_id": "20071473-b3b1-4022-a149-b47ab435cc5f",
+    "llm_config": {
+      "provider": "gemini",
+      "model_name": "gemini-2.5-flash",
+      "api_key": "AIzaSyCP3-LNqJFeIz1SyzGv-HruWItCgx55hKU",
+      "base_url": null,
+      "temperature": 0.7,
+      "max_tokens": 1000,
+      "top_p": null,
+      "frequency_penalty": null,
+      "presence_penalty": null,
+      "additional_params": {}
+    },
+    "device_id": "device_qjhx48258",
+    "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+    "ip_address": "127.0.0.1",
+    "status": "active",
+    "created_at": "2025-07-25T15:24:02.161689+00:00",
+    "last_accessed": "2025-07-25T15:26:26.699054+00:00",
+    "expires_at": "2025-07-26T15:24:02.161673+00:00",
+    "metadata": {
+      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+      "platform": "web"
+    }
+  },
+  "d43b87b7-361b-4ddf-a961-1d17c63c5602": {
+    "session_id": "d43b87b7-361b-4ddf-a961-1d17c63c5602",
+    "llm_config": {
+      "provider": "gemini",
+      "model_name": "gemini-2.5-flash",
+      "api_key": "AIzaSyCP3-LNqJFeIz1SyzGv-HruWItCgx55hKU",
+      "base_url": null,
+      "temperature": 0.7,
+      "max_tokens": 1000,
+      "top_p": null,
+      "frequency_penalty": null,
+      "presence_penalty": null,
+      "additional_params": {}
+    },
+    "device_id": "device_a65iphq3e",
+    "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+    "ip_address": "127.0.0.1",
+    "status": "active",
+    "created_at": "2025-07-25T15:26:55.075183+00:00",
+    "last_accessed": "2025-07-25T15:26:55.103362+00:00",
+    "expires_at": "2025-07-26T15:26:55.075141+00:00",
+    "metadata": {
+      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+      "platform": "web"
+    }
+  },
+  "e91e1437-4015-4a4f-8d9e-a3fd7397f297": {
+    "session_id": "e91e1437-4015-4a4f-8d9e-a3fd7397f297",
+    "llm_config": {
+      "provider": "gemini",
+      "model_name": "gemini-2.5-flash",
+      "api_key": "AIzaSyCP3-LNqJFeIz1SyzGv-HruWItCgx55hKU",
+      "base_url": null,
+      "temperature": 0.7,
+      "max_tokens": 1000,
+      "top_p": null,
+      "frequency_penalty": null,
+      "presence_penalty": null,
+      "additional_params": {}
+    },
+    "device_id": "device_fxqpl90og",
+    "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+    "ip_address": "127.0.0.1",
+    "status": "active",
+    "created_at": "2025-07-25T15:29:24.684742+00:00",
+    "last_accessed": "2025-07-25T15:29:24.703644+00:00",
+    "expires_at": "2025-07-26T15:29:24.684728+00:00",
+    "metadata": {
+      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+      "platform": "web"
+    }
+  },
+  "5a82cfc3-cd80-492b-bda0-62cadcec0c6f": {
+    "session_id": "5a82cfc3-cd80-492b-bda0-62cadcec0c6f",
+    "llm_config": {
+      "provider": "gemini",
+      "model_name": "gemini-2.5-flash",
+      "api_key": "AIzaSyCP3-LNqJFeIz1SyzGv-HruWItCgx55hKU",
+      "base_url": null,
+      "temperature": 0.7,
+      "max_tokens": 1000,
+      "top_p": null,
+      "frequency_penalty": null,
+      "presence_penalty": null,
+      "additional_params": {}
+    },
+    "device_id": "device_54ddh790a",
+    "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+    "ip_address": "127.0.0.1",
+    "status": "active",
+    "created_at": "2025-07-25T15:35:04.636695+00:00",
+    "last_accessed": "2025-07-25T15:35:04.651828+00:00",
+    "expires_at": "2025-07-26T15:35:04.636668+00:00",
+    "metadata": {
+      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+      "platform": "web"
+    }
+  },
+  "c850b437-06a7-47a0-a836-44d46cf83c6d": {
+    "session_id": "c850b437-06a7-47a0-a836-44d46cf83c6d",
+    "llm_config": {
+      "provider": "gemini",
+      "model_name": "gemini-2.5-flash",
+      "api_key": "AIzaSyCP3-LNqJFeIz1SyzGv-HruWItCgx55hKU",
+      "base_url": null,
+      "temperature": 0.7,
+      "max_tokens": 1000,
+      "top_p": null,
+      "frequency_penalty": null,
+      "presence_penalty": null,
+      "additional_params": {}
+    },
+    "device_id": "device_5odgjsyz8",
+    "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+    "ip_address": "127.0.0.1",
+    "status": "active",
+    "created_at": "2025-07-25T15:38:53.770950+00:00",
+    "last_accessed": "2025-07-25T15:38:53.788620+00:00",
+    "expires_at": "2025-07-26T15:38:53.770940+00:00",
+    "metadata": {
+      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+      "platform": "web"
+    }
+  },
+  "59225e2d-ad5d-4af4-989c-e49357d15b9e": {
+    "session_id": "59225e2d-ad5d-4af4-989c-e49357d15b9e",
+    "llm_config": {
+      "provider": "gemini",
+      "model_name": "gemini-2.5-flash",
+      "api_key": "AIzaSyCP3-LNqJFeIz1SyzGv-HruWItCgx55hKU",
+      "base_url": null,
+      "temperature": 0.7,
+      "max_tokens": 1000,
+      "top_p": null,
+      "frequency_penalty": null,
+      "presence_penalty": null,
+      "additional_params": {}
+    },
+    "device_id": "device_jyxav06v5",
+    "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+    "ip_address": "127.0.0.1",
+    "status": "active",
+    "created_at": "2025-07-25T15:41:06.444281+00:00",
+    "last_accessed": "2025-07-25T15:54:48.874617+00:00",
+    "expires_at": "2025-07-26T15:41:06.444264+00:00",
+    "metadata": {
+      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+      "platform": "web"
+    }
+  },
+  "cc099c49-37ed-49d3-b33e-b9cfc90d3ce5": {
+    "session_id": "cc099c49-37ed-49d3-b33e-b9cfc90d3ce5",
+    "llm_config": {
+      "provider": "gemini",
+      "model_name": "gemini-1.5-flash",
+      "api_key": "AIzaSyCP3-LNqJFeIz1SyzGv-HruWItCgx55hKU",
+      "base_url": null,
+      "temperature": 0.7,
+      "max_tokens": 1000,
+      "top_p": null,
+      "frequency_penalty": null,
+      "presence_penalty": null,
+      "additional_params": {}
+    },
+    "device_id": null,
+    "user_agent": "curl/8.7.1",
+    "ip_address": "127.0.0.1",
+    "status": "active",
+    "created_at": "2025-07-25T15:58:04.613587+00:00",
+    "last_accessed": "2025-07-25T15:58:49.374895+00:00",
+    "expires_at": "2025-07-26T15:58:04.613574+00:00",
+    "metadata": {}
+  },
+  "784b1cdb-4529-4aba-be85-26ca2520aaaf": {
+    "session_id": "784b1cdb-4529-4aba-be85-26ca2520aaaf",
+    "llm_config": {
+      "provider": "gemini",
+      "model_name": "gemini-2.5-flash",
+      "api_key": "AIzaSyCP3-LNqJFeIz1SyzGv-HruWItCgx55hKU",
+      "base_url": null,
+      "temperature": 0.7,
+      "max_tokens": 1000,
+      "top_p": null,
+      "frequency_penalty": null,
+      "presence_penalty": null,
+      "additional_params": {}
+    },
+    "device_id": "device_vkedo1lu0",
+    "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+    "ip_address": "127.0.0.1",
+    "status": "active",
+    "created_at": "2025-07-25T16:27:02.376953+00:00",
+    "last_accessed": "2025-07-25T16:45:43.659133+00:00",
+    "expires_at": "2025-07-26T16:27:02.376943+00:00",
+    "metadata": {
+      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+      "platform": "web"
+    }
+  }
+}

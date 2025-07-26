@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, ArrowRight, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { cn, getApiUrl } from "@/lib/utils";
+import { cn, getApiUrl, fetchWithSession } from "@/lib/utils";
 
 interface TemplateSelectorProps {
   resumeId: number;
@@ -28,8 +28,7 @@ export default function TemplateSelector({ resumeId, onNext, onBack }: TemplateS
   const { data: resume, isLoading } = useQuery({
     queryKey: ["/resume_sections/"],
     queryFn: async () => {
-      const apiUrl = getApiUrl();
-      const res = await fetch(`${apiUrl}/resume_sections/`);
+      const res = await fetchWithSession("/api/v1/resume_sections/");
       if (!res.ok) throw new Error("Failed to fetch resume sections");
       return res.json();
     },

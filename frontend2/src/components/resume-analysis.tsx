@@ -8,7 +8,7 @@ import { ArrowLeft, ArrowRight, User, Code, Briefcase, GraduationCap, Edit, Chec
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import type { Resume, ParsedResume, AnalysisResult } from "@/shared/schema";
-import { cn, getApiUrl } from "@/lib/utils";
+import { cn, getApiUrl, fetchWithSession } from "@/lib/utils";
 
 interface ResumeAnalysisProps {
   resumeId: number;
@@ -27,9 +27,8 @@ export default function ResumeAnalysis({ resumeId, onNext, onBack }: ResumeAnaly
   const { data: resume, isLoading: resumeLoading, error: resumeError } = useQuery({
     queryKey: ["resume_sections", resumeId],
     queryFn: async () => {
-      const apiUrl = getApiUrl();
-      console.log("Fetching resume sections from:", `${apiUrl}/resume_sections/`);
-      const res = await fetch(`${apiUrl}/resume_sections/`);
+      console.log("Fetching resume sections from:", `/resume_sections`);
+      const res = await fetchWithSession("/resume_sections");
       if (!res.ok) {
         const errorText = await res.text();
         console.error("API Error:", res.status, errorText);
@@ -116,8 +115,7 @@ export default function ResumeAnalysis({ resumeId, onNext, onBack }: ResumeAnaly
   // Update resume data mutation
   const updateResumeMutation = useMutation({
     mutationFn: async (updatedData: ParsedResume) => {
-      const apiUrl = getApiUrl();
-      const response = await fetch(`${apiUrl}/resume_sections/`, {
+      const response = await fetchWithSession("/resume_sections", {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",

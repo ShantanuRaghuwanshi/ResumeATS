@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Sidebar from "@/components/sidebar";
 import FileUpload from "@/components/file-upload";
 import LLMConfig from "@/components/llm-config";
@@ -7,19 +7,30 @@ import AISuggestions from "@/components/ai-suggestions";
 import TemplateSelector from "@/components/template-selector";
 import ResumePreview from "@/components/resume-preview";
 import DownloadOptions from "@/components/download-options";
-import JobAnalysisInterface from "@/components/job-analysis/job-analysis-interface";
+import JobAnalysisInterface from "@/components/job-analysis/enhanced-job-analysis-interface";
 import { VersionManager, VersionCompare } from "@/components/versions";
 import SystemStatusComponent from "@/components/system-status";
+import SessionStatus from "@/components/session-status";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { HelpCircle, Activity } from "lucide-react";
+import { useLLMConfig } from "@/contexts/llm-context";
 
 export type Step = "llm-config" | "upload" | "parsing" | "job-analysis" | "suggestions" | "templates" | "versions" | "download" | "system-status";
 
 export default function Dashboard() {
+  const { isConfigured, isSessionValid } = useLLMConfig();
   const [activeStep, setActiveStep] = useState<Step>("llm-config");
   const [resumeId, setResumeId] = useState<number | null>(null);
   const [progress, setProgress] = useState(1);
+
+  // Auto-advance if session is already configured and valid
+  useEffect(() => {
+    if (isConfigured && isSessionValid && activeStep === "llm-config") {
+      setActiveStep("upload");
+      setProgress(2);
+    }
+  }, [isConfigured, isSessionValid, activeStep]);
 
   const steps: { id: Step; label: string }[] = [
     { id: "llm-config", label: "LLM Configuration" },
@@ -41,8 +52,9 @@ export default function Dashboard() {
     setProgress(steps.findIndex(s => s.id === step) + 1);
   };
 
-  const handleResumeUploaded = (id: number) => {
-    setResumeId(id);
+  const handleResumeUploaded = (resumeData: any) => {
+    // Store the resume data for later use
+    setResumeId(resumeData.resume_id || resumeData.resumeId || 1);
     setActiveStep("parsing");
     setProgress(3);
   };
@@ -65,6 +77,8 @@ export default function Dashboard() {
         return resumeId ? (
           <JobAnalysisInterface
             resumeId={resumeId.toString()}
+            onNext={() => handleStepChange("suggestions")}
+            onBack={() => handleStepChange("parsing")}
           />
         ) : null;
       case "suggestions":

@@ -13,6 +13,7 @@ from app.models.user_preferences import UserProfile, SuggestionFeedback
 
 import json
 import asyncio
+from datetime import datetime
 from abc import ABC, abstractmethod
 from app.configs.config import get_logger
 
@@ -37,6 +38,12 @@ class LLMProviderBase(ABC):
 
     @abstractmethod
     async def extract_sections(self, text: str) -> ResumeSections:
+        raise NotImplementedError
+
+    # Simple test method for configuration validation
+    @abstractmethod
+    async def generate_simple_response(self, prompt: str) -> str:
+        """Generate a simple response for testing configuration"""
         raise NotImplementedError
 
     # New conversation and context management methods
@@ -83,6 +90,16 @@ class LLMProviderBase(ABC):
         user_profile: Optional[UserProfile] = None,
     ) -> List[Suggestion]:
         """Optimize content for a specific job description"""
+        raise NotImplementedError
+
+    @abstractmethod
+    async def optimize_resume(
+        self,
+        resume_data: Dict[str, Any],
+        job_description: str,
+        optimization_goals: Optional[List[str]] = None,
+    ) -> Dict[str, Any]:
+        """Optimize entire resume for a specific job description"""
         raise NotImplementedError
 
     # Context management methods
@@ -308,6 +325,20 @@ class OllamaProvider(LLMProviderBase):
     async def extract_sections(self, text: str) -> ResumeSections:
         return await self.ollama_extract_sections(text, self.ollama_client, self.model)
 
+    async def generate_simple_response(self, prompt: str) -> str:
+        """Generate a simple response for testing configuration"""
+        try:
+            response = await self.ollama_client.chat(
+                model=self.model,
+                messages=[{"role": "user", "content": prompt}],
+                options={"num_predict": 100, "temperature": 0.3},
+            )
+            return (
+                response["message"]["content"] or "Test response received successfully"
+            )
+        except Exception as e:
+            raise Exception(f"Ollama API test failed: {str(e)}")
+
     async def generate_conversation_response(
         self,
         message: str,
@@ -467,6 +498,165 @@ Focus on relevant keywords, skills, and experiences that align with the job post
 
         return questions[:2]  # Limit to 2 questions
 
+    async def optimize_resume(
+        self,
+        resume_data: Dict[str, Any],
+        job_description: str,
+        optimization_goals: Optional[List[str]] = None,
+    ) -> Dict[str, Any]:
+        """Optimize entire resume for a specific job description using Ollama"""
+        optimized_resume = resume_data.copy()
+
+        # Extract key information from job description
+        jd_analysis_prompt = f"""Analyze this job description and extract:
+1. Required skills (technical and soft skills)
+2. Key responsibilities and qualifications
+3. Important keywords and phrases
+4. Company culture indicators
+5. Experience level requirements
+
+Job Description:
+{job_description}
+
+Provide a structured analysis."""
+
+        try:
+            # Analyze job description
+            jd_response = await self.ollama_client.chat(
+                model=self.model,
+                messages=[{"role": "user", "content": jd_analysis_prompt}],
+            )
+
+            jd_analysis = jd_response["message"]["content"]
+
+            # Generate optimization suggestions for each section
+            sections_to_optimize = ["skills", "experience", "summary", "education"]
+            suggestions_by_section = {}
+
+            for section in sections_to_optimize:
+                section_content = resume_data.get(section, "")
+                if not section_content:
+                    continue
+
+                optimization_prompt = f"""Based on this job description analysis:
+{jd_analysis[:500]}...
+
+Optimize this {section} section to better match the job requirements:
+
+Current {section}:
+{section_content}
+
+Provide specific suggestions for:
+1. New skills to add that are mentioned in the job description
+2. How to reframe existing content to better align with job requirements
+3. Keywords to incorporate naturally
+4. Achievements to highlight or quantify
+5. Content that should be emphasized or de-emphasized
+
+Focus on making the candidate appear as a strong match while maintaining truthfulness."""
+
+                try:
+                    optimization_response = await self.ollama_client.chat(
+                        model=self.model,
+                        messages=[{"role": "user", "content": optimization_prompt}],
+                    )
+
+                    suggestions_by_section[section] = optimization_response["message"][
+                        "content"
+                    ]
+
+                except Exception as e:
+                    logger.error(f"Error optimizing {section}: {e}")
+                    suggestions_by_section[section] = (
+                        f"Error generating suggestions for {section}"
+                    )
+
+            # Generate improved content for key sections
+            if "skills" in resume_data:
+                skills_improvement_prompt = f"""Based on the job analysis and current skills, suggest an improved skills section:
+
+Current Skills: {resume_data.get('skills', '')}
+
+Job Requirements Analysis: {jd_analysis[:300]}...
+
+Provide an enhanced skills section that:
+1. Includes relevant skills from the job description that the candidate likely has
+2. Prioritizes the most important skills for this role
+3. Uses similar terminology as the job posting
+4. Maintains credibility and truthfulness
+
+Return only the improved skills section content."""
+
+                try:
+                    skills_response = await self.ollama_client.chat(
+                        model=self.model,
+                        messages=[
+                            {"role": "user", "content": skills_improvement_prompt}
+                        ],
+                    )
+                    optimized_resume["skills"] = skills_response["message"]["content"]
+                except Exception as e:
+                    logger.error(f"Error improving skills section: {e}")
+
+            # Generate improved summary/objective
+            if "summary" in resume_data or "objective" in resume_data:
+                summary_content = resume_data.get("summary") or resume_data.get(
+                    "objective", ""
+                )
+                summary_prompt = f"""Rewrite this professional summary to better align with the job requirements:
+
+Current Summary: {summary_content}
+
+Job Analysis: {jd_analysis[:300]}...
+
+Create a compelling summary that:
+1. Highlights relevant experience for this specific role
+2. Uses keywords from the job description naturally
+3. Emphasizes achievements that matter for this position
+4. Shows clear value proposition for the employer
+
+Return only the improved summary."""
+
+                try:
+                    summary_response = await self.ollama_client.chat(
+                        model=self.model,
+                        messages=[{"role": "user", "content": summary_prompt}],
+                    )
+
+                    if "summary" in resume_data:
+                        optimized_resume["summary"] = summary_response["message"][
+                            "content"
+                        ]
+                    else:
+                        optimized_resume["objective"] = summary_response["message"][
+                            "content"
+                        ]
+                except Exception as e:
+                    logger.error(f"Error improving summary: {e}")
+
+            # Add optimization metadata
+            optimized_resume["optimization_metadata"] = {
+                "job_description_analyzed": True,
+                "optimization_timestamp": datetime.utcnow().isoformat(),
+                "sections_optimized": list(suggestions_by_section.keys()),
+                "suggestions_by_section": suggestions_by_section,
+                "optimization_goals": optimization_goals
+                or ["ats_optimization", "keyword_matching"],
+                "model_used": self.model,
+            }
+
+            return optimized_resume
+
+        except Exception as e:
+            logger.error(f"Error in resume optimization: {e}")
+            # Return original resume with error info if optimization fails
+            optimized_resume["optimization_metadata"] = {
+                "optimization_error": str(e),
+                "optimization_timestamp": datetime.utcnow().isoformat(),
+                "fallback_applied": True,
+            }
+            return optimized_resume
+
 
 # Stubs for other providers
 class OpenAIProvider(LLMProviderBase):
@@ -529,6 +719,22 @@ class OpenAIProvider(LLMProviderBase):
         if result is None:
             raise ValueError("Failed to extract resume sections: result is None")
         return result.model_dump()
+
+    async def generate_simple_response(self, prompt: str) -> str:
+        """Generate a simple response for testing configuration"""
+        try:
+            response = await self.client.chat.completions.create(
+                model=self.model,
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.3,
+                max_tokens=100,
+            )
+            return (
+                response.choices[0].message.content
+                or "Test response received successfully"
+            )
+        except Exception as e:
+            raise Exception(f"OpenAI API test failed: {str(e)}")
 
     async def generate_conversation_response(
         self,
@@ -774,6 +980,158 @@ Focus on relevant keywords, skills, and experiences that align with the job post
 
         return questions[:2]  # Limit to 2 questions
 
+    async def optimize_resume(
+        self,
+        resume_data: Dict[str, Any],
+        job_description: str,
+        optimization_goals: Optional[List[str]] = None,
+    ) -> Dict[str, Any]:
+        """Optimize entire resume for a specific job description using OpenAI"""
+        optimized_resume = resume_data.copy()
+
+        try:
+            # Analyze job description first
+            jd_analysis_response = await self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "You are an expert resume optimization assistant. Analyze job descriptions and provide structured insights.",
+                    },
+                    {
+                        "role": "user",
+                        "content": f"""Analyze this job description and extract:
+1. Required technical skills
+2. Required soft skills  
+3. Key responsibilities
+4. Important keywords
+5. Experience level needed
+6. Company culture indicators
+
+Job Description:
+{job_description}
+
+Provide a structured analysis.""",
+                    },
+                ],
+                temperature=0.3,
+            )
+
+            jd_analysis = jd_analysis_response.choices[0].message.content
+
+            # Optimize skills section
+            if "skills" in resume_data and resume_data["skills"]:
+                skills_response = await self.client.chat.completions.create(
+                    model=self.model,
+                    messages=[
+                        {
+                            "role": "system",
+                            "content": "You are a resume optimization expert. Enhance skills sections to match job requirements while maintaining truthfulness.",
+                        },
+                        {
+                            "role": "user",
+                            "content": f"""Job Analysis: {jd_analysis[:500]}...
+
+Current Skills: {resume_data['skills']}
+
+Enhance this skills section by:
+1. Adding relevant skills from the job description that the candidate likely has
+2. Reordering to prioritize job-relevant skills
+3. Using similar terminology as the job posting
+4. Maintaining credibility
+
+Return only the improved skills section.""",
+                        },
+                    ],
+                    temperature=0.3,
+                )
+                optimized_resume["skills"] = skills_response.choices[0].message.content
+
+            # Optimize summary/objective
+            summary_field = "summary" if "summary" in resume_data else "objective"
+            if summary_field in resume_data and resume_data[summary_field]:
+                summary_response = await self.client.chat.completions.create(
+                    model=self.model,
+                    messages=[
+                        {
+                            "role": "system",
+                            "content": "You are a resume writing expert. Rewrite professional summaries to align with specific job requirements.",
+                        },
+                        {
+                            "role": "user",
+                            "content": f"""Job Analysis: {jd_analysis[:500]}...
+
+Current {summary_field}: {resume_data[summary_field]}
+
+Rewrite this {summary_field} to:
+1. Highlight relevant experience for this specific role
+2. Use keywords from the job description naturally
+3. Show clear value proposition
+4. Emphasize achievements that matter for this position
+
+Return only the improved {summary_field}.""",
+                        },
+                    ],
+                    temperature=0.3,
+                )
+                optimized_resume[summary_field] = summary_response.choices[
+                    0
+                ].message.content
+
+            # Generate suggestions for experience section
+            experience_suggestions = ""
+            if "experience" in resume_data and resume_data["experience"]:
+                exp_response = await self.client.chat.completions.create(
+                    model=self.model,
+                    messages=[
+                        {
+                            "role": "system",
+                            "content": "You are a career advisor. Provide specific suggestions for improving work experience descriptions.",
+                        },
+                        {
+                            "role": "user",
+                            "content": f"""Job Analysis: {jd_analysis[:500]}...
+
+Current Experience: {resume_data['experience'][:1000]}...
+
+Provide specific suggestions for improving this experience section:
+1. How to reframe achievements to match job requirements
+2. Metrics and quantifications to add
+3. Keywords to incorporate
+4. Skills to emphasize
+5. Projects or responsibilities to highlight
+
+Return actionable suggestions.""",
+                        },
+                    ],
+                    temperature=0.3,
+                )
+                experience_suggestions = exp_response.choices[0].message.content
+
+            # Add optimization metadata
+            optimized_resume["optimization_metadata"] = {
+                "job_description_analyzed": True,
+                "optimization_timestamp": datetime.utcnow().isoformat(),
+                "sections_optimized": ["skills", summary_field]
+                + (["experience_suggestions"] if experience_suggestions else []),
+                "experience_improvement_suggestions": experience_suggestions,
+                "job_analysis": jd_analysis,
+                "optimization_goals": optimization_goals
+                or ["ats_optimization", "keyword_matching"],
+                "model_used": self.model,
+            }
+
+            return optimized_resume
+
+        except Exception as e:
+            logger.error(f"Error in OpenAI resume optimization: {e}")
+            optimized_resume["optimization_metadata"] = {
+                "optimization_error": str(e),
+                "optimization_timestamp": datetime.utcnow().isoformat(),
+                "fallback_applied": True,
+            }
+            return optimized_resume
+
 
 class ClaudeProvider(LLMProviderBase):
     def __init__(self, config: Dict[str, Any]):
@@ -813,6 +1171,18 @@ class ClaudeProvider(LLMProviderBase):
             messages=[{"role": "user", "content": text}],
         )
         return response.content[0].to_dict()
+
+    async def generate_simple_response(self, prompt: str) -> str:
+        """Generate a simple response for testing configuration"""
+        try:
+            response = await self.client.messages.create(
+                model=self.model,
+                max_tokens=100,
+                messages=[{"role": "user", "content": prompt}],
+            )
+            return response.content[0].text or "Test response received successfully"
+        except Exception as e:
+            raise Exception(f"Claude API test failed: {str(e)}")
 
     async def generate_conversation_response(
         self,
@@ -998,6 +1368,121 @@ Focus on relevant keywords, skills, and experiences that align with the job post
             )
 
         return questions[:2]  # Limit to 2 questions
+
+    async def optimize_resume(
+        self,
+        resume_data: Dict[str, Any],
+        job_description: str,
+        optimization_goals: Optional[List[str]] = None,
+    ) -> Dict[str, Any]:
+        """Optimize entire resume for a specific job description using Claude"""
+        optimized_resume = resume_data.copy()
+
+        try:
+            # Analyze job description
+            jd_analysis_response = await self.client.messages.create(
+                model=self.model,
+                max_tokens=1000,
+                system="You are an expert resume optimization assistant specializing in job description analysis.",
+                messages=[
+                    {
+                        "role": "user",
+                        "content": f"""Analyze this job description and extract key information:
+
+Job Description:
+{job_description}
+
+Please provide:
+1. Required technical skills
+2. Required soft skills
+3. Key responsibilities and qualifications
+4. Important keywords and industry terms
+5. Experience level requirements
+6. Company culture indicators
+
+Structure your analysis clearly.""",
+                    }
+                ],
+            )
+
+            jd_analysis = jd_analysis_response.content[0].text
+
+            # Optimize skills section
+            if "skills" in resume_data and resume_data["skills"]:
+                skills_response = await self.client.messages.create(
+                    model=self.model,
+                    max_tokens=500,
+                    system="You are a resume writing expert. Optimize skills sections to match job requirements while maintaining truthfulness.",
+                    messages=[
+                        {
+                            "role": "user",
+                            "content": f"""Based on this job analysis:
+{jd_analysis[:500]}...
+
+Current Skills Section:
+{resume_data['skills']}
+
+Please provide an optimized skills section that:
+1. Includes relevant skills from the job description
+2. Prioritizes the most important skills for this role
+3. Uses terminology consistent with the job posting
+4. Maintains credibility and truthfulness
+
+Return only the improved skills section content.""",
+                        }
+                    ],
+                )
+                optimized_resume["skills"] = skills_response.content[0].text
+
+            # Optimize summary/objective
+            summary_field = "summary" if "summary" in resume_data else "objective"
+            if summary_field in resume_data and resume_data[summary_field]:
+                summary_response = await self.client.messages.create(
+                    model=self.model,
+                    max_tokens=400,
+                    system="You are a professional resume writer. Craft compelling summaries that align with job requirements.",
+                    messages=[
+                        {
+                            "role": "user",
+                            "content": f"""Job Analysis:
+{jd_analysis[:400]}...
+
+Current {summary_field}:
+{resume_data[summary_field]}
+
+Rewrite this {summary_field} to better align with the job requirements:
+1. Highlight relevant experience and achievements
+2. Incorporate important keywords naturally
+3. Show clear value proposition for this specific role
+4. Maintain professional tone and accuracy
+
+Return only the improved {summary_field}.""",
+                        }
+                    ],
+                )
+                optimized_resume[summary_field] = summary_response.content[0].text
+
+            # Add optimization metadata
+            optimized_resume["optimization_metadata"] = {
+                "job_description_analyzed": True,
+                "optimization_timestamp": datetime.utcnow().isoformat(),
+                "sections_optimized": ["skills", summary_field],
+                "job_analysis": jd_analysis,
+                "optimization_goals": optimization_goals
+                or ["ats_optimization", "keyword_matching"],
+                "model_used": self.model,
+            }
+
+            return optimized_resume
+
+        except Exception as e:
+            logger.error(f"Error in Claude resume optimization: {e}")
+            optimized_resume["optimization_metadata"] = {
+                "optimization_error": str(e),
+                "optimization_timestamp": datetime.utcnow().isoformat(),
+                "fallback_applied": True,
+            }
+            return optimized_resume
 
 
 class GeminiProvider(LLMProviderBase):
@@ -1241,6 +1726,27 @@ class GeminiProvider(LLMProviderBase):
                     "error": f"Failed to parse resume: {str(fallback_error)}",
                 }
 
+    async def generate_simple_response(self, prompt: str) -> str:
+        """Generate a simple response for testing configuration"""
+        import asyncio
+
+        loop = asyncio.get_event_loop()
+
+        def sync_call():
+            return self.model_client.generate_content(
+                contents=prompt,
+                generation_config=genai.GenerationConfig(
+                    max_output_tokens=100,
+                    temperature=0.3,
+                ),
+            )
+
+        try:
+            response = await loop.run_in_executor(None, sync_call)
+            return response.text or "Test response received successfully"
+        except Exception as e:
+            raise Exception(f"Gemini API test failed: {str(e)}")
+
     async def generate_conversation_response(
         self,
         message: str,
@@ -1409,6 +1915,98 @@ Focus on relevant keywords, skills, and experiences that align with the job post
             )
 
         return questions[:2]  # Limit to 2 questions
+
+    async def optimize_resume(
+        self,
+        resume_data: Dict[str, Any],
+        job_description: str,
+        optimization_goals: Optional[List[str]] = None,
+    ) -> Dict[str, Any]:
+        """Optimize entire resume for a specific job description using Gemini"""
+        optimized_resume = resume_data.copy()
+
+        try:
+            # Analyze job description
+            jd_prompt = f"""Analyze this job description and extract key information:
+
+Job Description:
+{job_description}
+
+Please provide a structured analysis including:
+1. Required technical skills
+2. Required soft skills
+3. Key responsibilities and qualifications
+4. Important keywords and industry terms
+5. Experience level requirements
+6. Company culture and values
+
+Provide a clear, organized analysis."""
+
+            jd_response = await self.model.generate_content_async(jd_prompt)
+            jd_analysis = jd_response.text
+
+            # Optimize skills section
+            if "skills" in resume_data and resume_data["skills"]:
+                skills_prompt = f"""Based on this job analysis:
+{jd_analysis[:500]}...
+
+Current Skills Section:
+{resume_data['skills']}
+
+Please optimize this skills section to better match the job requirements:
+1. Add relevant skills mentioned in the job description
+2. Prioritize skills that are most important for this role
+3. Use terminology consistent with the job posting
+4. Maintain truthfulness and credibility
+
+Return only the improved skills section."""
+
+                skills_response = await self.model.generate_content_async(skills_prompt)
+                optimized_resume["skills"] = skills_response.text
+
+            # Optimize summary/objective
+            summary_field = "summary" if "summary" in resume_data else "objective"
+            if summary_field in resume_data and resume_data[summary_field]:
+                summary_prompt = f"""Job Analysis Summary:
+{jd_analysis[:400]}...
+
+Current {summary_field}:
+{resume_data[summary_field]}
+
+Please rewrite this {summary_field} to better align with the job requirements:
+1. Emphasize relevant experience and achievements
+2. Incorporate important keywords naturally
+3. Show clear value proposition for this specific role
+4. Maintain professional tone and accuracy
+
+Return only the improved {summary_field}."""
+
+                summary_response = await self.model.generate_content_async(
+                    summary_prompt
+                )
+                optimized_resume[summary_field] = summary_response.text
+
+            # Add optimization metadata
+            optimized_resume["optimization_metadata"] = {
+                "job_description_analyzed": True,
+                "optimization_timestamp": datetime.utcnow().isoformat(),
+                "sections_optimized": ["skills", summary_field],
+                "job_analysis": jd_analysis,
+                "optimization_goals": optimization_goals
+                or ["ats_optimization", "keyword_matching"],
+                "model_used": self.model_name,
+            }
+
+            return optimized_resume
+
+        except Exception as e:
+            logger.error(f"Error in Gemini resume optimization: {e}")
+            optimized_resume["optimization_metadata"] = {
+                "optimization_error": str(e),
+                "optimization_timestamp": datetime.utcnow().isoformat(),
+                "fallback_applied": True,
+            }
+            return optimized_resume
 
 
 # Factory pattern for LLM providers

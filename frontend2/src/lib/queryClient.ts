@@ -1,5 +1,5 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
-import { getApiUrl } from "@/lib/utils";
+import { getApiUrl, getSessionHeaders } from "@/lib/utils";
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
@@ -15,10 +15,38 @@ export async function apiRequest(
 ): Promise<Response> {
   const apiUrl = getApiUrl();
   const fullUrl = url.startsWith("http") ? url : `${apiUrl}${url}`;
+
+  const headers: Record<string, string> = {
+    ...getSessionHeaders(fullUrl),
+    ...(data ? { "Content-Type": "application/json" } : {}),
+  };
+
   const res = await fetch(fullUrl, {
     method,
-    headers: data ? { "Content-Type": "application/json" } : {},
+    headers,
     body: data ? JSON.stringify(data) : undefined,
+    credentials: "include",
+  });
+
+  await throwIfResNotOk(res);
+  return res;
+}
+
+export async function apiUpload(
+  url: string,
+  formData: FormData,
+): Promise<Response> {
+  const apiUrl = getApiUrl();
+  const fullUrl = url.startsWith("http") ? url : `${apiUrl}${url}`;
+
+  const headers: Record<string, string> = {
+    ...getSessionHeaders(fullUrl),
+  };
+
+  const res = await fetch(fullUrl, {
+    method: "POST",
+    headers,
+    body: formData,
     credentials: "include",
   });
 
@@ -31,19 +59,23 @@ export const getQueryFn: <T>(options: {
   on401: UnauthorizedBehavior;
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
-  async ({ queryKey }) => {
-    const apiUrl = getApiUrl();
-    const res = await fetch(`${apiUrl}/${queryKey.join("/")}` as string, {
-      credentials: "include",
-    });
+    async ({ queryKey }) => {
+      const apiUrl = getApiUrl();
+      const fullUrl = `${apiUrl}/${queryKey.join("/")}` as string;
+      const headers = getSessionHeaders(fullUrl);
 
-    if (unauthorizedBehavior === "returnNull" && res.status === 401) {
-      return null;
-    }
+      const res = await fetch(fullUrl, {
+        headers,
+        credentials: "include",
+      });
 
-    await throwIfResNotOk(res);
-    return await res.json();
-  };
+      if (unauthorizedBehavior === "returnNull" && res.status === 401) {
+        return null;
+      }
+
+      await throwIfResNotOk(res);
+      return await res.json();
+    };
 
 export const queryClient = new QueryClient({
   defaultOptions: {

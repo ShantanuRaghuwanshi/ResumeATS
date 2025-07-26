@@ -1,10 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, ArrowRight, AlertTriangle, Info, CheckCircle } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ArrowLeft, ArrowRight, AlertTriangle, Info, CheckCircle, Briefcase, Target, Plus } from "lucide-react";
 import type { Resume, AnalysisResult } from "@/shared/schema";
-import { cn, getApiUrl } from "@/lib/utils";
+import { cn, getApiUrl, fetchWithSession } from "@/lib/utils";
 
 interface AISuggestionsProps {
   resumeId: number;
@@ -17,15 +18,26 @@ export default function AISuggestions({ resumeId, onNext, onBack }: AISuggestion
   const { data: resume, isLoading } = useQuery({
     queryKey: ["/resume_sections/"],
     queryFn: async () => {
-      const apiUrl = getApiUrl();
-      const res = await fetch(`${apiUrl}/resume_sections/`);
+      const res = await fetchWithSession("/api/v1/resume_sections/");
       if (!res.ok) throw new Error("Failed to fetch resume sections");
       return res.json();
     },
     enabled: !!resumeId,
   });
 
-  if (isLoading || !resume) {
+  // Fetch job-specific suggestions if available
+  const { data: jobSuggestions, isLoading: jobSuggestionsLoading } = useQuery({
+    queryKey: ["job-suggestions", resumeId],
+    queryFn: async () => {
+      const apiUrl = getApiUrl();
+      const res = await fetch(`${apiUrl}/resume/${resumeId}/job-suggestions`);
+      if (!res.ok) return null; // Job suggestions are optional
+      return res.json();
+    },
+    enabled: !!resumeId,
+  });
+
+  if (isLoading || jobSuggestionsLoading || !resume) {
     return (
       <Card className="bg-white rounded-xl shadow-sm border border-slate-200">
         <CardContent className="p-8">
@@ -117,7 +129,57 @@ export default function AISuggestions({ resumeId, onNext, onBack }: AISuggestion
           </div>
         </div>
 
-        {/* ATS Compatibility Score */}
+        {/* Job-Specific Suggestions Tab */}
+        <Tabs defaultValue="general" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-6">
+            <TabsTrigger value="general" className="flex items-center gap-2">
+              <Target className="w-4 h-4" />
+              General Suggestions
+            </TabsTrigger>
+            <TabsTrigger value="job-specific" className="flex items-center gap-2">
+              <Briefcase className="w-4 h-4" />
+              Job-Specific Tips
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="general">
+            {/* Original suggestions content */}
+            {renderGeneralSuggestions()}
+          </TabsContent>
+
+          <TabsContent value="job-specific">
+            {jobSuggestions ? renderJobSpecificSuggestions() : renderNoJobSuggestions()}
+          </TabsContent>
+        </Tabs>
+
+        {/* Navigation */}
+        <div className="flex justify-between items-center mt-8">
+          <div className="flex items-center gap-3">
+            <Button variant="outline" onClick={onBack}>
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Job Analysis
+            </Button>
+            {!jobSuggestions && (
+              <Button variant="ghost" onClick={onBack} className="text-blue-600 hover:text-blue-700">
+                <Plus className="w-4 h-4 mr-2" />
+                Add Job Descriptions
+              </Button>
+            )}
+          </div>
+          <Button onClick={onNext} className="bg-primary text-white hover:bg-blue-600">
+            Continue to Templates
+            <ArrowRight className="w-4 h-4 ml-2" />
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+
+  function renderGeneralSuggestions() {
+    if (!analysisResults) return null;
+
+    return (
+      <div className="space-y-6">{/* ATS Compatibility Score */}
         {analysisResults.atsCompatibility && (
           <Card className="mb-8 bg-gradient-to-r from-purple-50 to-blue-50 border-purple-200">
             <CardContent className="p-6">
@@ -236,19 +298,84 @@ export default function AISuggestions({ resumeId, onNext, onBack }: AISuggestion
             </p>
           </CardContent>
         </Card>
+      </div>
+    );
+  }
 
-        {/* Navigation */}
-        <div className="flex justify-between mt-8">
+  function renderJobSpecificSuggestions() {
+    return (
+      <div className="space-y-6">
+        <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Briefcase className="w-5 h-5 text-blue-600" />
+              Job-Specific Recommendations
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-slate-600 mb-4">
+              Based on your uploaded job descriptions, here are targeted suggestions to improve your match rate.
+            </p>
+
+            {jobSuggestions.matches?.map((match: any, index: number) => (
+              <Card key={index} className="mb-4 bg-white">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h5 className="font-semibold text-slate-800">{match.jobTitle}</h5>
+                    <Badge variant="outline" className={`${match.score >= 80 ? 'bg-green-50 text-green-800' : match.score >= 60 ? 'bg-yellow-50 text-yellow-800' : 'bg-red-50 text-red-800'}`}>
+                      {match.score}% Match
+                    </Badge>
+                  </div>
+
+                  {match.missingSkills?.length > 0 && (
+                    <div className="mb-3">
+                      <h6 className="text-sm font-medium text-slate-700 mb-2">Missing Skills:</h6>
+                      <div className="flex flex-wrap gap-1">
+                        {match.missingSkills.slice(0, 5).map((skill: string, skillIndex: number) => (
+                          <Badge key={skillIndex} variant="outline" className="text-xs bg-red-50 text-red-700">
+                            {skill}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {match.recommendations?.length > 0 && (
+                    <div>
+                      <h6 className="text-sm font-medium text-slate-700 mb-2">Recommendations:</h6>
+                      <ul className="text-sm text-slate-600 space-y-1">
+                        {match.recommendations.slice(0, 3).map((rec: string, recIndex: number) => (
+                          <li key={recIndex} className="flex items-start gap-2">
+                            <span className="text-blue-500 mt-1">•</span>
+                            {rec}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  function renderNoJobSuggestions() {
+    return (
+      <Card className="text-center py-12">
+        <CardContent>
+          <Briefcase className="w-12 h-12 mx-auto mb-4 text-slate-400" />
+          <h4 className="text-lg font-semibold text-slate-800 mb-2">No Job-Specific Suggestions Available</h4>
+          <p className="text-slate-600 mb-4">
+            Upload job descriptions in the previous step to get targeted recommendations for specific roles.
+          </p>
           <Button variant="outline" onClick={onBack}>
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Analysis
+            Go Back to Job Analysis
           </Button>
-          <Button onClick={onNext} className="bg-primary text-white hover:bg-blue-600">
-            Continue to Templates
-            <ArrowRight className="w-4 h-4 ml-2" />
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
-  );
+        </CardContent>
+      </Card>
+    );
+  }
 }

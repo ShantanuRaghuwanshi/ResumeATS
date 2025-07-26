@@ -5,6 +5,7 @@
 import { queryClient } from '@/lib/queryClient';
 import { useWebSocket } from '@/hooks/use-websocket';
 import { useToast } from '@/hooks/use-toast';
+import { getSessionHeaders } from '@/lib/utils';
 
 export interface ServiceError {
   service: string;
@@ -51,10 +52,10 @@ class IntegrationService {
     try {
       // Check system health on startup
       await this.checkSystemHealth();
-      
+
       // Setup error handling for React Query
       this.setupQueryErrorHandling();
-      
+
       console.log('Integration service initialized successfully');
     } catch (error) {
       console.error('Failed to initialize integration service:', error);
@@ -100,7 +101,7 @@ class IntegrationService {
   private handleQueryError(error: any) {
     const service = this.extractServiceFromError(error);
     this.recordServiceError(service, error);
-    
+
     // Show user-friendly error message
     if (this.toast) {
       this.toast({
@@ -117,7 +118,7 @@ class IntegrationService {
   private handleMutationError(error: any) {
     const service = this.extractServiceFromError(error);
     this.recordServiceError(service, error);
-    
+
     // Show user-friendly error message
     if (this.toast) {
       this.toast({
@@ -133,14 +134,14 @@ class IntegrationService {
    */
   private extractServiceFromError(error: any): string {
     const url = error?.config?.url || error?.request?.responseURL || '';
-    
+
     if (url.includes('/conversation')) return 'conversation';
     if (url.includes('/section')) return 'section_optimization';
     if (url.includes('/job-analysis')) return 'job_analysis';
     if (url.includes('/feedback')) return 'feedback';
     if (url.includes('/version')) return 'version_management';
     if (url.includes('/resume')) return 'resume';
-    
+
     return 'unknown';
   }
 
@@ -150,15 +151,15 @@ class IntegrationService {
   private recordServiceError(service: string, error: any) {
     const now = Date.now();
     const breaker = this.circuitBreakers.get(service) || { failures: 0, lastFailure: 0, isOpen: false };
-    
+
     breaker.failures++;
     breaker.lastFailure = now;
-    
+
     // Open circuit breaker if too many failures
     if (breaker.failures >= 5 && !breaker.isOpen) {
       breaker.isOpen = true;
       console.warn(`Circuit breaker opened for service: ${service}`);
-      
+
       // Auto-reset after 5 minutes
       setTimeout(() => {
         breaker.isOpen = false;
@@ -166,7 +167,7 @@ class IntegrationService {
         console.info(`Circuit breaker reset for service: ${service}`);
       }, 5 * 60 * 1000);
     }
-    
+
     this.circuitBreakers.set(service, breaker);
   }
 
@@ -185,23 +186,23 @@ class IntegrationService {
     if (error?.response?.data?.detail) {
       return error.response.data.detail;
     }
-    
+
     if (error?.response?.status === 503) {
       return 'Service is temporarily unavailable. Please try again later.';
     }
-    
+
     if (error?.response?.status >= 500) {
       return 'An internal server error occurred. Please try again.';
     }
-    
+
     if (error?.response?.status === 429) {
       return 'Too many requests. Please wait a moment and try again.';
     }
-    
+
     if (error?.code === 'NETWORK_ERROR') {
       return 'Network connection error. Please check your internet connection.';
     }
-    
+
     return error?.message || 'An unexpected error occurred.';
   }
 
@@ -224,24 +225,24 @@ class IntegrationService {
 
     try {
       const result = await operation();
-      
+
       // Reset circuit breaker on success
       const breaker = this.circuitBreakers.get(service);
       if (breaker) {
         breaker.failures = 0;
         breaker.isOpen = false;
       }
-      
+
       return result;
     } catch (error) {
       this.recordServiceError(service, error);
-      
+
       // Try fallback if available
       if (fallback) {
         console.warn(`Using fallback for ${service} due to error:`, error);
         return fallback();
       }
-      
+
       throw error;
     }
   }
@@ -251,12 +252,18 @@ class IntegrationService {
    */
   async checkSystemHealth(): Promise<SystemStatus> {
     try {
-      const response = await fetch(`${this.baseUrl}/api/v1/monitoring/health/detailed`);
-      
+      const url = `${this.baseUrl}/api/v1/monitoring/health/detailed`;
+      const headers = getSessionHeaders(url);
+
+      const response = await fetch(url, {
+        headers,
+        credentials: "include",
+      });
+
       if (!response.ok) {
         throw new Error(`Health check failed: ${response.status}`);
       }
-      
+
       const data = await response.json();
       return data.system_status;
     } catch (error) {
@@ -270,12 +277,18 @@ class IntegrationService {
    */
   async getSystemMetrics() {
     try {
-      const response = await fetch(`${this.baseUrl}/api/v1/monitoring/metrics`);
-      
+      const url = `${this.baseUrl}/api/v1/monitoring/metrics`;
+      const headers = getSessionHeaders(url);
+
+      const response = await fetch(url, {
+        headers,
+        credentials: "include",
+      });
+
       if (!response.ok) {
         throw new Error(`Metrics fetch failed: ${response.status}`);
       }
-      
+
       return await response.json();
     } catch (error) {
       console.error('Failed to get system metrics:', error);
@@ -293,12 +306,12 @@ class IntegrationService {
   ) {
     const wsUrl = `${this.baseUrl.replace('http', 'ws')}/api/v1/ws/${connectionType}`;
     const params = new URLSearchParams();
-    
+
     if (sessionId) params.append('session_id', sessionId);
     if (userId) params.append('user_id', userId);
-    
+
     const fullUrl = `${wsUrl}?${params.toString()}`;
-    
+
     return useWebSocket(fullUrl, {
       onConnect: () => {
         console.log(`WebSocket connected: ${connectionType}`);
@@ -323,7 +336,7 @@ class IntegrationService {
       console.log('Connection restored');
       // Invalidate all queries to refresh data
       queryClient.invalidateQueries();
-      
+
       if (this.toast) {
         this.toast({
           title: 'Connection Restored',
@@ -334,7 +347,7 @@ class IntegrationService {
 
     const handleOffline = () => {
       console.log('Connection lost');
-      
+
       if (this.toast) {
         this.toast({
           title: 'Connection Lost',
@@ -365,7 +378,7 @@ class IntegrationService {
    */
   getCircuitBreakerStatus() {
     const status: Record<string, any> = {};
-    
+
     this.circuitBreakers.forEach((breaker, service) => {
       status[service] = {
         isOpen: breaker.isOpen,
@@ -373,7 +386,7 @@ class IntegrationService {
         lastFailure: breaker.lastFailure,
       };
     });
-    
+
     return status;
   }
 

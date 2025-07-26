@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { getApiUrl } from "@/lib/utils";
+import { getApiUrl, fetchWithSession } from "@/lib/utils";
 import {
     History,
     Download,
@@ -87,8 +87,7 @@ export function ExportHistory({ resumeId, onDownload }: ExportHistoryProps) {
     } = useQuery({
         queryKey: ["export-history", "current_user"], // Replace with actual user ID
         queryFn: async () => {
-            const apiUrl = getApiUrl();
-            const response = await fetch(`${apiUrl}/api/v1/export/history/current_user`);
+            const response = await fetchWithSession("/api/v1/export/history/current_user");
             if (!response.ok) {
                 throw new Error("Failed to fetch export history");
             }
@@ -145,8 +144,7 @@ export function ExportHistory({ resumeId, onDownload }: ExportHistoryProps) {
 
     const handleReDownload = async (historyItem: ExportHistoryItem) => {
         try {
-            const apiUrl = getApiUrl();
-            const response = await fetch(`${apiUrl}/api/v1/export/download/${historyItem.export_request_id}`);
+            const response = await fetchWithSession(`/api/v1/export/download/${historyItem.export_request_id}`);
 
             if (!response.ok) {
                 throw new Error("Download failed");
@@ -319,14 +317,14 @@ export function ExportHistory({ resumeId, onDownload }: ExportHistoryProps) {
                                     <div
                                         key={item.id}
                                         className={`flex items-center space-x-4 p-4 border rounded-lg transition-colors ${item.is_available && !isExpired
-                                                ? "hover:bg-slate-50"
-                                                : "bg-slate-50 opacity-75"
+                                            ? "hover:bg-slate-50"
+                                            : "bg-slate-50 opacity-75"
                                             }`}
                                     >
                                         {/* File Icon */}
                                         <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${item.is_available && !isExpired
-                                                ? "bg-primary/10 text-primary"
-                                                : "bg-slate-200 text-slate-400"
+                                            ? "bg-primary/10 text-primary"
+                                            : "bg-slate-200 text-slate-400"
                                             }`}>
                                             <Icon className="w-6 h-6" />
                                         </div>

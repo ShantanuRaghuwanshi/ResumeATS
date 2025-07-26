@@ -22,6 +22,8 @@ class InMemoryDatabase:
             "change_impact_analyses": {},
             "performance_metrics": {},
             "user_feedback": {},
+            "user_sessions": {},
+            "session_data": {},
         }
         self.data_dir = Path("data")
         self.data_dir.mkdir(exist_ok=True)

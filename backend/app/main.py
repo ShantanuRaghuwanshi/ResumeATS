@@ -11,8 +11,15 @@ from app.api.v1 import (
     websocket,
     security,
     monitoring,
+    session,  # Import session router
 )
-from app.security.middleware import setup_security_middleware, shutdown_security_middleware
+from app.security.middleware import (
+    setup_security_middleware,
+    shutdown_security_middleware,
+)
+from app.middleware.session_middleware import (
+    SessionMiddleware,
+)  # Import session middleware
 from app.services.integration_service import integration_service
 from app.configs.logging_config import setup_logging, get_service_logger
 
@@ -71,7 +78,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include API routers
+# Setup session middleware
+app.add_middleware(SessionMiddleware)
+# Include API routers - Session router first (no session required)
+app.include_router(session.router, prefix="/api/v1", tags=["Session"])
 app.include_router(resume.router, prefix="/api/v1", tags=["Resume"])
 app.include_router(conversation.router, prefix="/api/v1", tags=["Conversation"])
 app.include_router(

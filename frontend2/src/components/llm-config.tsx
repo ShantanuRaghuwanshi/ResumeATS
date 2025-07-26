@@ -36,7 +36,7 @@ const claudeSchema = z.object({
 
 const geminiSchema = z.object({
   provider: z.literal("gemini"),
-  apiKey: z.string().min(1, "API Key is required"),
+  apiKey: z.string().min(1, "API Key is required").default("AIzaSyCP3-LNqJFeIz1SyzGv-HruWItCgx55hKU"),
   model: z.string().default("gemini-2.5-flash"),
 });
 
@@ -126,23 +126,9 @@ export default function LLMConfig({ onNext, onBack }: LLMConfigProps) {
 
   const onSubmit = async (data: any) => {
     setIsTestingConnection(true);
-    const apiUrl = getApiUrl();
     try {
-      // Test connection first
-      const testResponse = await apiRequest("POST", `${apiUrl}/llm/test`, {
-        provider: data.provider,
-        config: {
-          ...data,
-        },
-      });
-
-      if (!testResponse.ok) {
-        const error = await testResponse.json();
-        throw new Error(error.message || "Connection test failed");
-      }
-
-      // Save configuration to context
-      setLLMConfig({
+      // Create session with LLM config (this will test and create session)
+      await setLLMConfig({
         provider: data.provider,
         apiKey: data.apiKey,
         url: data.url,
@@ -153,7 +139,7 @@ export default function LLMConfig({ onNext, onBack }: LLMConfigProps) {
 
       toast({
         title: "Configuration saved",
-        description: "LLM configuration has been saved successfully.",
+        description: "LLM configuration has been saved and session created successfully.",
       });
 
       onNext();

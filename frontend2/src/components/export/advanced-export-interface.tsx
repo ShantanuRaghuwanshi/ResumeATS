@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { getApiUrl } from "@/lib/utils";
+import { getApiUrl, fetchWithSession } from "@/lib/utils";
 import { ExportOptionsPanel } from "./export-options-panel";
 import { ExportPreview } from "./export-preview";
 import { ExportHistory } from "./export-history";
@@ -90,8 +90,7 @@ export default function AdvancedExportInterface({
     const { data: formats, isLoading: formatsLoading } = useQuery({
         queryKey: ["export-formats"],
         queryFn: async () => {
-            const apiUrl = getApiUrl();
-            const response = await fetch(`${apiUrl}/api/v1/export/formats`);
+            const response = await fetchWithSession("/api/v1/export/formats");
             if (!response.ok) throw new Error("Failed to fetch formats");
             const data = await response.json();
             return data.formats as ExportFormat[];
@@ -102,8 +101,7 @@ export default function AdvancedExportInterface({
     const { data: templates, isLoading: templatesLoading } = useQuery({
         queryKey: ["export-templates"],
         queryFn: async () => {
-            const apiUrl = getApiUrl();
-            const response = await fetch(`${apiUrl}/api/v1/export/templates`);
+            const response = await fetchWithSession("/api/v1/export/templates");
             if (!response.ok) throw new Error("Failed to fetch templates");
             const data = await response.json();
             return data.templates as ExportTemplate[];
@@ -114,8 +112,7 @@ export default function AdvancedExportInterface({
     const { data: resumeData } = useQuery({
         queryKey: ["resume", resumeId],
         queryFn: async () => {
-            const apiUrl = getApiUrl();
-            const response = await fetch(`${apiUrl}/resume_sections/`);
+            const response = await fetchWithSession("/api/v1/resume_sections/");
             if (!response.ok) throw new Error("Failed to fetch resume data");
             return response.json();
         },
@@ -125,8 +122,7 @@ export default function AdvancedExportInterface({
     // Create export request mutation
     const createExportMutation = useMutation({
         mutationFn: async (exportConfig: any) => {
-            const apiUrl = getApiUrl();
-            const response = await fetch(`${apiUrl}/api/v1/export/single`, {
+            const response = await fetchWithSession("/api/v1/export/single", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -166,8 +162,7 @@ export default function AdvancedExportInterface({
     // Generate preview mutation
     const generatePreviewMutation = useMutation({
         mutationFn: async () => {
-            const apiUrl = getApiUrl();
-            const response = await fetch(`${apiUrl}/api/v1/export/preview`, {
+            const response = await fetchWithSession("/api/v1/export/preview", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -206,7 +201,7 @@ export default function AdvancedExportInterface({
 
         const poll = async () => {
             try {
-                const response = await fetch(`${apiUrl}/api/v1/export/request/${exportId}`);
+                const response = await fetchWithSession(`/api/v1/export/request/${exportId}`);
                 if (!response.ok) return;
 
                 const exportRequest: ExportRequest = await response.json();
@@ -269,8 +264,7 @@ export default function AdvancedExportInterface({
     // Handle download
     const handleDownload = async (exportRequest: ExportRequest) => {
         try {
-            const apiUrl = getApiUrl();
-            const response = await fetch(`${apiUrl}/api/v1/export/download/${exportRequest.id}`);
+            const response = await fetchWithSession(`/api/v1/export/download/${exportRequest.id}`);
 
             if (!response.ok) {
                 throw new Error("Download failed");

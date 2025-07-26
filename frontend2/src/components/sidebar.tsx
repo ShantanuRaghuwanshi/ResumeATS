@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
 import { FileUp, Settings, Search, Lightbulb, Palette, Download, Briefcase, GitBranch } from "lucide-react";
 import type { Step } from "@/pages/dashboard";
+import SessionStatus from "@/components/session-status";
 
 interface SidebarProps {
   activeStep: Step;
@@ -51,6 +52,11 @@ export default function Sidebar({ activeStep, onStepChange }: SidebarProps) {
             );
           })}
         </nav>
+
+        {/* Session Status */}
+        <div className="mt-8">
+          <SessionStatus />
+        </div>
       </div>
     </div>
   );

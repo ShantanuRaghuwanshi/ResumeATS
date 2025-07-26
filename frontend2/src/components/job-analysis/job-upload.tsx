@@ -44,6 +44,7 @@ export default function JobUpload({ resumeId, onJobUploaded, onJobsChanged }: Jo
     const [company, setCompany] = useState("");
     const [urlInput, setUrlInput] = useState("");
     const [uploadedJobs, setUploadedJobs] = useState<JobDescription[]>([]);
+    const [showSuccess, setShowSuccess] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const { toast } = useToast();
@@ -69,6 +70,10 @@ export default function JobUpload({ resumeId, onJobUploaded, onJobsChanged }: Jo
             setJobTitle("");
             setCompany("");
             setUrlInput("");
+
+            // Show success state briefly
+            setShowSuccess(true);
+            setTimeout(() => setShowSuccess(false), 3000);
 
             toast({
                 title: "Job description uploaded",

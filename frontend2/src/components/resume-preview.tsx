@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ZoomIn, ZoomOut } from "lucide-react";
 import { useState } from "react";
-import { getApiUrl } from "@/lib/utils";
+import { getApiUrl, fetchWithSession } from "@/lib/utils";
 import type { Resume, ParsedResume } from "@/shared/schema";
 
 interface ResumePreviewProps {
@@ -17,8 +17,7 @@ export default function ResumePreview({ resumeId }: ResumePreviewProps) {
   const { data: resume, isLoading } = useQuery({
     queryKey: ["/resume_sections/"],
     queryFn: async () => {
-      const apiUrl = getApiUrl();
-      const res = await fetch(`${apiUrl}/resume_sections/`);
+      const res = await fetchWithSession("/api/v1/resume_sections/");
       if (!res.ok) throw new Error("Failed to fetch resume sections");
       return res.json();
     },

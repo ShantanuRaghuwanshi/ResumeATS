@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, Download, FileText, FileImage, File, Settings } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { getApiUrl } from "@/lib/utils";
+import { getApiUrl, fetchWithSession } from "@/lib/utils";
 import { AdvancedExportInterface } from "@/components/export";
 import type { Resume, AnalysisResult } from "@/shared/schema";
 
@@ -32,8 +32,7 @@ export default function DownloadOptions({ resumeId, onBack }: DownloadOptionsPro
   const { data: resume, isLoading } = useQuery({
     queryKey: ["/resume_sections/"],
     queryFn: async () => {
-      const apiUrl = getApiUrl();
-      const res = await fetch(`${apiUrl}/resume_sections/`);
+      const res = await fetchWithSession("/api/v1/resume_sections/");
       if (!res.ok) throw new Error("Failed to fetch resume sections");
       return res.json();
     },

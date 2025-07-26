@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Briefcase,
   Upload,
@@ -11,7 +12,10 @@ import {
   GitCompare,
   Plus,
   FileText,
-  Target
+  Target,
+  CheckCircle,
+  AlertCircle,
+  Info
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import JobUpload from "./job-upload";
@@ -31,9 +35,11 @@ interface JobDescription {
 
 interface JobAnalysisInterfaceProps {
   resumeId: string;
+  onNext?: () => void;
+  onBack?: () => void;
 }
 
-export default function JobAnalysisInterface({ resumeId }: JobAnalysisInterfaceProps) {
+export default function JobAnalysisInterface({ resumeId, onNext, onBack }: JobAnalysisInterfaceProps) {
   const [activeTab, setActiveTab] = useState("upload");
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
   const [comparisonJobIds, setComparisonJobIds] = useState<string[]>([]);
@@ -87,11 +93,34 @@ export default function JobAnalysisInterface({ resumeId }: JobAnalysisInterfaceP
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="text-center">
+      <div className="text-center mb-8">
         <h2 className="text-3xl font-bold text-slate-800 mb-2">Job Description Analysis</h2>
         <p className="text-lg text-muted-foreground">
           Upload job descriptions and get AI-powered matching recommendations for your resume
         </p>
+
+        {/* Status Overview */}
+        {jobDescriptions && jobDescriptions.length > 0 && (
+          <Alert className="mt-6 bg-blue-50 border-blue-200">
+            <Info className="h-4 w-4" />
+            <AlertDescription className="flex items-center justify-center gap-4">
+              <span className="flex items-center gap-2">
+                <FileText className="w-4 h-4" />
+                {jobDescriptions.length} job{jobDescriptions.length !== 1 ? 's' : ''} uploaded
+              </span>
+              <span className="flex items-center gap-2">
+                <Target className="w-4 h-4" />
+                {jobDescriptions.filter(j => j.isAnalyzed).length} analyzed
+              </span>
+              {jobDescriptions.filter(j => j.isAnalyzed).length > 0 && (
+                <span className="flex items-center gap-2 text-green-700">
+                  <CheckCircle className="w-4 h-4" />
+                  Ready for AI suggestions
+                </span>
+              )}
+            </AlertDescription>
+          </Alert>
+        )}
       </div>
 
       {/* Main Interface */}
@@ -259,6 +288,29 @@ export default function JobAnalysisInterface({ resumeId }: JobAnalysisInterfaceP
           )}
         </TabsContent>
       </Tabs>
+
+      {/* Navigation Footer */}
+      {(onNext || onBack) && (
+        <div className="flex justify-between items-center mt-8 pt-6 border-t border-slate-200">
+          {onBack ? (
+            <Button variant="outline" onClick={onBack} className="flex items-center gap-2">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              Back to Resume Analysis
+            </Button>
+          ) : <div />}
+
+          {onNext && (
+            <Button onClick={onNext} className="flex items-center gap-2">
+              Continue to AI Suggestions
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </Button>
+          )}
+        </div>
+      )}
     </div>
   );
 }
